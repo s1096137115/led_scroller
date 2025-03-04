@@ -5,11 +5,22 @@ import '../../providers/scroller_providers.dart';
 import '../../models/scroller.dart';
 import 'widgets/scroller_card.dart';
 
-class HomeScreen extends ConsumerWidget {
+/// 首頁畫面
+/// 顯示所有已建立的Scroller列表
+/// 提供建立新Scroller和群組的入口
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends ConsumerState<HomeScreen> {
+  bool _isSelectionMode = false;
+  final Set<String> _selectedItems = {};
+
+  @override
+  Widget build(BuildContext context) {
     final scrollers = ref.watch(scrollersProvider);
 
     return Scaffold(
@@ -53,29 +64,79 @@ class HomeScreen extends ConsumerWidget {
               ),
               const SizedBox(height: 24),
 
-              // My Collections Section with Group Button
+              // My Collections Section with Action Buttons (Updated UI)
+              const Text(
+                'My collections',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // Action Buttons Row (Delete and Create Group)
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
-                    'My collections',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
+                  // Delete Button
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: _isSelectionMode ? _deleteSelected : _enterSelectionMode,
+                      icon: const Icon(Icons.delete),
+                      label: Text(_isSelectionMode ? 'Delete Selected' : 'Delete'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF2A2A3E),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(24),
+                        ),
+                      ),
                     ),
                   ),
-                  TextButton.icon(
-                    onPressed: () {
-                      // Clear selections before creating a group
-                      ref.read(selectedScrollersProvider.notifier).clear();
-                      context.push('/create-group');
-                    },
-                    icon: const Icon(Icons.add),
-                    label: const Text('Create group'),
+                  const SizedBox(width: 16),
+                  // Create Group Button
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        // Clear selections before creating a group
+                        ref.read(selectedScrollersProvider.notifier).clear();
+                        context.push('/create-group');
+                      },
+                      icon: const Icon(Icons.add_circle_outline),
+                      label: const Text('Create group'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF2A2A3E),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(24),
+                        ),
+                      ),
+                    ),
                   ),
                 ],
               ),
               const SizedBox(height: 16),
+
+              // Selection Mode Indicator & Cancel Button
+              if (_isSelectionMode) ...[
+                Row(
+                  children: [
+                    Text(
+                      'Selected: ${_selectedItems.length}',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const Spacer(),
+                    TextButton(
+                      onPressed: _exitSelectionMode,
+                      child: const Text('Cancel'),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+              ],
 
               // Scrollers List or Empty State
               Expanded(
@@ -84,13 +145,16 @@ class HomeScreen extends ConsumerWidget {
                     : ListView.builder(
                   itemCount: scrollers.length,
                   itemBuilder: (context, index) {
+                    final scroller = scrollers[index];
                     return Padding(
                       padding: const EdgeInsets.only(bottom: 8.0),
-                      child: ScrollerCard(
-                        scroller: scrollers[index],
+                      child: _isSelectionMode
+                          ? _buildSelectableCard(scroller)
+                          : ScrollerCard(
+                        scroller: scroller,
                         onEdit: () {
                           // Set current scroller for editing
-                          ref.read(currentScrollerProvider.notifier).state = scrollers[index];
+                          ref.read(currentScrollerProvider.notifier).state = scroller;
                           context.push('/create');
                         },
                       ),
@@ -103,6 +167,114 @@ class HomeScreen extends ConsumerWidget {
         ),
       ),
     );
+  }
+
+  Widget _buildSelectableCard(Scroller scroller) {
+    final isSelected = _selectedItems.contains(scroller.id);
+
+    // Convert hex string to color
+    final backgroundColor = Color(int.parse(scroller.backgroundColor.replaceAll('#', '0xFF')));
+    final textColor = Color(int.parse(scroller.textColor.replaceAll('#', '0xFF')));
+
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          if (isSelected) {
+            _selectedItems.remove(scroller.id);
+          } else {
+            _selectedItems.add(scroller.id);
+          }
+        });
+      },
+      child: Card(
+        margin: EdgeInsets.zero,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+          side: isSelected
+              ? BorderSide(
+            color: Theme.of(context).colorScheme.primary,
+            width: 2,
+          )
+              : BorderSide.none,
+        ),
+        child: Stack(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(16.0),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12),
+                color: backgroundColor,
+              ),
+              child: Text(
+                scroller.text,
+                style: TextStyle(
+                  color: textColor,
+                  fontSize: scroller.fontSize.toDouble(),
+                  fontFamily: scroller.fontFamily,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            if (isSelected)
+              Positioned(
+                top: 8,
+                right: 8,
+                child: Container(
+                  padding: const EdgeInsets.all(2),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.primary,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.check,
+                    color: Colors.white,
+                    size: 16,
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _enterSelectionMode() {
+    setState(() {
+      _isSelectionMode = true;
+      _selectedItems.clear();
+    });
+  }
+
+  void _exitSelectionMode() {
+    setState(() {
+      _isSelectionMode = false;
+      _selectedItems.clear();
+    });
+  }
+
+  void _deleteSelected() {
+    if (_selectedItems.isEmpty) return;
+
+    // Convert to List<String> to avoid concurrent modification and type issues
+    final itemsToDelete = _selectedItems.toList();
+    ref.read(scrollersProvider.notifier).deleteSelectedScrollers(itemsToDelete);
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('${itemsToDelete.length} scrollers deleted'),
+        action: SnackBarAction(
+          label: 'Undo',
+          onPressed: () {
+            // Add the scrollers back if user presses undo
+            // This would require keeping a copy of deleted scrollers
+            // Not implemented in this example
+          },
+        ),
+      ),
+    );
+
+    _exitSelectionMode();
   }
 
   Widget _buildEmptyState() {

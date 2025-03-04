@@ -49,24 +49,23 @@ class ScrollerCard extends ConsumerWidget {
       },
       child: GestureDetector(
         onTap: onEdit,
-        child: Card(
-          margin: EdgeInsets.zero,
-          child: Container(
-            padding: const EdgeInsets.all(16.0),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12),
-              color: backgroundColor,
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 16.0),
+          decoration: BoxDecoration(
+            color: backgroundColor,
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Text(
+            scroller.text,
+            style: TextStyle(
+              color: textColor,
+              fontSize: scroller.fontSize.toDouble(),
+              fontFamily: scroller.fontFamily,
             ),
-            child: Text(
-              scroller.text,
-              style: TextStyle(
-                color: textColor,
-                fontSize: scroller.fontSize.toDouble(),
-                fontFamily: scroller.fontFamily,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
           ),
         ),
       ),
