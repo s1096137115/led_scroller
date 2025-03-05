@@ -4,10 +4,12 @@ import 'package:go_router/go_router.dart';
 import '../../models/scroller.dart';
 import '../../providers/scroller_providers.dart';
 import 'widgets/color_picker.dart';
+import 'widgets/led_grid_painter.dart';
 
 /// 建立/編輯Scroller頁面
 /// 提供完整的Scroller設定界面，包含樣式和效果設定
 /// 支援預覽和儲存功能
+/// 根據Figma設計風格進行調整
 class CreateScreen extends ConsumerStatefulWidget {
   const CreateScreen({Key? key}) : super(key: key);
 
@@ -24,6 +26,9 @@ class _CreateScreenState extends ConsumerState<CreateScreen> with SingleTickerPr
   String _backgroundColor = '#9C27B0';
   ScrollDirection _direction = ScrollDirection.left;
   int _speed = 5;
+
+  // LED背景開關狀態
+  bool _ledBackgroundOn = false;
 
   bool get _isEditing => ref.read(currentScrollerProvider) != null;
 
@@ -42,6 +47,9 @@ class _CreateScreenState extends ConsumerState<CreateScreen> with SingleTickerPr
       _backgroundColor = currentScroller.backgroundColor;
       _direction = currentScroller.direction;
       _speed = currentScroller.speed;
+    } else {
+      // 如果是新建，設置初始文字
+      _textController.text = "Happy New Year !!!!";
     }
   }
 
@@ -99,66 +107,175 @@ class _CreateScreenState extends ConsumerState<CreateScreen> with SingleTickerPr
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFF1A1A2E), // 深色背景，匹配設計稿
       appBar: AppBar(
-        title: Text(_isEditing ? 'Edit LED Scroller' : 'Create LED Scroller'),
+        title: Text(_isEditing ? 'Edit Led Scroller' : 'Create Led Scroller'),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => context.pop(),
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.check),
             onPressed: _saveScroller,
           ),
         ],
-        bottom: TabBar(
-          controller: _tabController,
-          tabs: const [
-            Tab(text: 'Style'),
-            Tab(text: 'Effect'),
-          ],
-        ),
       ),
-      body: TabBarView(
-        controller: _tabController,
-        children: [
-          _buildStyleTab(),
-          _buildEffectTab(),
-        ],
-      ),
-      bottomNavigationBar: BottomAppBar(
+      body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: () => context.pop(),
-                  child: const Text('Cancel'),
+              // 預覽卡片 - 紫色背景
+              Container(
+                height: 120,
+                decoration: BoxDecoration(
+                  color: Color(int.parse(_backgroundColor.replaceAll('#', '0xFF'))),
+                  borderRadius: BorderRadius.circular(24),
+                ),
+                child: Stack(
+                  children: [
+                    // LED效果網格(當LED背景開啟時顯示)
+                    if (_ledBackgroundOn)
+                      Opacity(
+                        opacity: 0.4,
+                        child: CustomPaint(
+                          painter: LedGridPainter(Color(int.parse(_backgroundColor.replaceAll('#', '0xFF')))),
+                          size: Size.infinite,
+                        ),
+                      ),
+                    // 文字內容
+                    Center(
+                      child: Text(
+                        _textController.text.isEmpty ? 'Happy New Year !!!!' : _textController.text,
+                        style: TextStyle(
+                          fontSize: _fontSize.toDouble(),
+                          fontFamily: _fontFamily,
+                          color: Color(int.parse(_textColor.replaceAll('#', '0xFF'))),
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(width: 8),
+
+              // 文字輸入區域 - 根據Figma設計，沒有計數器
+              const SizedBox(height: 16),
+              TextField(
+                controller: _textController,
+                decoration: InputDecoration(
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(24),
+                    borderSide: BorderSide.none,
+                  ),
+                  filled: true,
+                  fillColor: const Color(0xFF2A2A3E),
+                  hintText: 'Enter text',
+                  hintStyle: const TextStyle(color: Colors.grey),
+                  contentPadding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 20.0),
+                ),
+                style: const TextStyle(color: Colors.white),
+                textAlign: TextAlign.center,
+                onChanged: (_) => setState(() {}),
+              ),
+
+              // 標籤頁區域
               Expanded(
-                child: FilledButton(
-                  onPressed: () {
-                    final previewScroller = Scroller.create(
-                      text: _textController.text.isEmpty ? 'Preview Text' : _textController.text,
-                      fontSize: _fontSize,
-                      fontFamily: _fontFamily,
-                      textColor: _textColor,
-                      backgroundColor: _backgroundColor,
-                      direction: _direction,
-                      speed: _speed,
-                    );
-                    ref.read(currentScrollerProvider.notifier).state = previewScroller;
-                    context.push('/preview');
-                  },
-                  child: const Text('Preview'),
+                child: Container(
+                  margin: const EdgeInsets.only(top: 16.0),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF24243D),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: Colors.purple.withOpacity(0.3), width: 1),
+                  ),
+                  child: Column(
+                    children: [
+                      TabBar(
+                        controller: _tabController,
+                        tabs: const [
+                          Tab(text: 'Style'),
+                          Tab(text: 'Effect'),
+                        ],
+                        indicatorColor: Colors.purple.shade400,
+                        indicatorSize: TabBarIndicatorSize.tab,
+                        labelColor: Colors.purple.shade400,
+                        unselectedLabelColor: Colors.grey,
+                        labelStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      ),
+                      const Divider(height: 1, thickness: 1, color: Color(0xFF333355)),
+                      Expanded(
+                        child: TabBarView(
+                          controller: _tabController,
+                          children: [
+                            _buildStyleTab(),
+                            _buildEffectTab(),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: FilledButton(
-                  onPressed: _saveScroller,
-                  child: const Text('Save'),
-                ),
+
+              const SizedBox(height: 24),
+
+              // 底部按鈕
+              Row(
+                children: [
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () {
+                        final previewScroller = Scroller.create(
+                          text: _textController.text.isEmpty ? 'Preview Text' : _textController.text,
+                          fontSize: _fontSize,
+                          fontFamily: _fontFamily,
+                          textColor: _textColor,
+                          backgroundColor: _backgroundColor,
+                          direction: _direction,
+                          speed: _speed,
+                        );
+                        ref.read(currentScrollerProvider.notifier).state = previewScroller;
+                        context.push('/preview');
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF31314F),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        elevation: 0,
+                      ),
+                      child: const Text(
+                        'View Full Screen',
+                        style: TextStyle(fontSize: 16),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: _saveScroller,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF31314F),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        elevation: 0,
+                      ),
+                      child: const Text(
+                        'Save',
+                        style: TextStyle(fontSize: 16),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
@@ -173,60 +290,41 @@ class _CreateScreenState extends ConsumerState<CreateScreen> with SingleTickerPr
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Preview card
-          Card(
-            margin: const EdgeInsets.only(bottom: 24.0),
-            child: Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(16.0),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(12),
-                color: Color(int.parse(_backgroundColor.replaceAll('#', '0xFF'))),
-              ),
-              child: Text(
-                _textController.text.isEmpty ? 'Sample Text' : _textController.text,
-                style: TextStyle(
-                  fontSize: _fontSize.toDouble(),
-                  fontFamily: _fontFamily,
-                  color: Color(int.parse(_textColor.replaceAll('#', '0xFF'))),
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ),
-          ),
-
-          // Text input
-          TextField(
-            controller: _textController,
-            decoration: const InputDecoration(
-              labelText: 'Text',
-              border: OutlineInputBorder(),
-              hintText: 'Enter text to display',
-            ),
-            maxLength: 100,
-            onChanged: (_) => setState(() {}),
-          ),
-          const SizedBox(height: 24),
-
-          // Font size
-          const Text('Size', style: TextStyle(fontWeight: FontWeight.bold)),
+          // 字體大小
+          const Text('Size', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
           const SizedBox(height: 8),
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: Row(
               children: [20, 40, 60, 80, 100].map((size) {
+                final isSelected = _fontSize == size;
                 return Padding(
                   padding: const EdgeInsets.only(right: 8.0),
-                  child: ChoiceChip(
-                    label: Text('$size'),
-                    selected: _fontSize == size,
-                    onSelected: (selected) {
-                      if (selected) {
-                        setState(() {
-                          _fontSize = size;
-                        });
-                      }
+                  child: InkWell(
+                    onTap: () {
+                      setState(() {
+                        _fontSize = size;
+                      });
                     },
+                    child: Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: isSelected ? Colors.purple : Colors.transparent,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: isSelected ? Colors.purple : Colors.grey.withOpacity(0.5),
+                        ),
+                      ),
+                      child: Center(
+                        child: Text(
+                          '$size',
+                          style: TextStyle(
+                            color: isSelected ? Colors.white : Colors.grey,
+                          ),
+                        ),
+                      ),
+                    ),
                   ),
                 );
               }).toList(),
@@ -234,8 +332,8 @@ class _CreateScreenState extends ConsumerState<CreateScreen> with SingleTickerPr
           ),
           const SizedBox(height: 24),
 
-          // Font family
-          const Text('Fonts', style: TextStyle(fontWeight: FontWeight.bold)),
+          // 字體選擇
+          const Text('Fonts', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
           const SizedBox(height: 8),
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
@@ -251,26 +349,14 @@ class _CreateScreenState extends ConsumerState<CreateScreen> with SingleTickerPr
           ),
           const SizedBox(height: 24),
 
-          // Color picker
-          const Text('Text Color', style: TextStyle(fontWeight: FontWeight.bold)),
+          // 文字顏色
+          const Text('Text Color', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
           const SizedBox(height: 8),
           ColorPicker(
             currentColor: _textColor,
             onColorSelected: (color) {
               setState(() {
                 _textColor = color;
-              });
-            },
-          ),
-          const SizedBox(height: 24),
-
-          const Text('Background Color', style: TextStyle(fontWeight: FontWeight.bold)),
-          const SizedBox(height: 8),
-          ColorPicker(
-            currentColor: _backgroundColor,
-            onColorSelected: (color) {
-              setState(() {
-                _backgroundColor = color;
               });
             },
           ),
@@ -285,40 +371,41 @@ class _CreateScreenState extends ConsumerState<CreateScreen> with SingleTickerPr
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Direction
-          const Text('Direction', style: TextStyle(fontWeight: FontWeight.bold)),
-          const SizedBox(height: 8),
+          // 方向按鈕
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              _buildDirectionButton(ScrollDirection.left, Icons.arrow_back),
               _buildDirectionButton(ScrollDirection.right, Icons.arrow_forward),
+              _buildDirectionButton(ScrollDirection.left, Icons.arrow_back),
               _buildDirectionButton(ScrollDirection.up, Icons.arrow_upward),
               _buildDirectionButton(ScrollDirection.down, Icons.arrow_downward),
             ],
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 32),
 
-          // Speed
-          const Text('Speed', style: TextStyle(fontWeight: FontWeight.bold)),
-          const SizedBox(height: 8),
-          Slider(
-            value: _speed.toDouble(),
-            min: 1,
-            max: 10,
-            divisions: 9,
-            label: _speed.toString(),
-            onChanged: (value) {
-              setState(() {
-                _speed = value.toInt();
-              });
-            },
-          ),
+          // 速度按鈕
+          const Text('Speed Scroll', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+          const SizedBox(height: 16),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: const [
-              Text('Slow'),
-              Text('Fast'),
+            children: [
+              _buildSpeedButton(0, "0"),
+              _buildSpeedButton(3, "0.5x"),
+              _buildSpeedButton(5, "1x"),
+              _buildSpeedButton(8, "5x"),
+              _buildSpeedButton(10, "10x"),
+            ],
+          ),
+          const SizedBox(height: 32),
+
+          // LED背景選項
+          const Text('Led background', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              _buildLedBackgroundButton(false, "Off"),
+              const SizedBox(width: 16),
+              _buildLedBackgroundButton(true, "On"),
             ],
           ),
         ],
@@ -326,34 +413,34 @@ class _CreateScreenState extends ConsumerState<CreateScreen> with SingleTickerPr
     );
   }
 
-  Widget _buildFontOption(String fontFamily, String sample) {
-    final isSelected = _fontFamily == fontFamily;
+  Widget _buildFontOption(String fontName, String sample) {
+    final isSelected = _fontFamily == fontName;
 
     return Padding(
       padding: const EdgeInsets.only(right: 8.0),
       child: InkWell(
         onTap: () {
           setState(() {
-            _fontFamily = fontFamily;
+            _fontFamily = fontName;
           });
         },
         child: Container(
-          width: 50,
-          height: 50,
+          width: 48,
+          height: 48,
           decoration: BoxDecoration(
             border: Border.all(
-              color: isSelected ? Theme.of(context).colorScheme.primary : Colors.grey,
+              color: isSelected ? Colors.purple : Colors.grey.withOpacity(0.5),
               width: isSelected ? 2 : 1,
             ),
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(12),
           ),
           child: Center(
             child: Text(
               sample,
               style: TextStyle(
-                fontFamily: fontFamily,
-                fontWeight: FontWeight.bold,
-                color: isSelected ? Theme.of(context).colorScheme.primary : null,
+                fontFamily: fontName,
+                color: isSelected ? Colors.purple : Colors.grey,
+                fontSize: 16,
               ),
             ),
           ),
@@ -362,26 +449,106 @@ class _CreateScreenState extends ConsumerState<CreateScreen> with SingleTickerPr
     );
   }
 
-  Widget _buildDirectionButton(ScrollDirection direction, IconData icon) {
-    final isSelected = _direction == direction;
+  Widget _buildDirectionButton(ScrollDirection dir, IconData icon) {
+    final isSelected = _direction == dir;
 
-    return ElevatedButton(
-      onPressed: () {
-        setState(() {
-          _direction = direction;
-        });
-      },
-      style: ElevatedButton.styleFrom(
-        backgroundColor: isSelected
-            ? Theme.of(context).colorScheme.primaryContainer
-            : Theme.of(context).colorScheme.surfaceVariant,
-        foregroundColor: isSelected
-            ? Theme.of(context).colorScheme.onPrimaryContainer
-            : Theme.of(context).colorScheme.onSurfaceVariant,
-        shape: const CircleBorder(),
-        padding: const EdgeInsets.all(16),
+    return Container(
+      width: 60,
+      height: 60,
+      decoration: BoxDecoration(
+        color: Colors.transparent,
+        border: Border.all(color: Colors.white.withOpacity(0.3), width: 1),
+        borderRadius: BorderRadius.circular(12),
       ),
-      child: Icon(icon),
+      child: Material(
+        color: isSelected ? Colors.purple.withOpacity(0.3) : Colors.transparent,
+        borderRadius: BorderRadius.circular(12),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: () {
+            setState(() {
+              _direction = dir;
+            });
+          },
+          child: Center(
+            child: Icon(
+              icon,
+              color: isSelected ? Colors.white : Colors.white.withOpacity(0.7),
+              size: 24,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSpeedButton(int spd, String label) {
+    final isSelected = _speed == spd;
+
+    return Container(
+      width: 60,
+      height: 60,
+      decoration: BoxDecoration(
+        color: Colors.transparent,
+        border: Border.all(color: Colors.white.withOpacity(0.3), width: 1),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Material(
+        color: isSelected ? Colors.purple.withOpacity(0.3) : Colors.transparent,
+        borderRadius: BorderRadius.circular(12),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: () {
+            setState(() {
+              _speed = spd;
+            });
+          },
+          child: Center(
+            child: Text(
+              label,
+              style: TextStyle(
+                color: isSelected ? Colors.white : Colors.white.withOpacity(0.7),
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLedBackgroundButton(bool isOn, String label) {
+    final isSelected = isOn == _ledBackgroundOn;
+
+    return Container(
+      width: 60,
+      height: 60,
+      decoration: BoxDecoration(
+        color: Colors.transparent,
+        border: Border.all(color: Colors.white.withOpacity(0.3), width: 1),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Material(
+        color: isSelected ? Colors.purple.withOpacity(0.3) : Colors.transparent,
+        borderRadius: BorderRadius.circular(12),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: () {
+            setState(() {
+              _ledBackgroundOn = isOn;
+            });
+          },
+          child: Center(
+            child: Text(
+              label,
+              style: TextStyle(
+                color: isSelected ? Colors.white : Colors.white.withOpacity(0.7),
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
