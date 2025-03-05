@@ -5,6 +5,7 @@ import '../../models/scroller.dart';
 import '../../providers/scroller_providers.dart';
 import 'widgets/color_picker.dart';
 import 'widgets/led_grid_painter.dart';
+import 'widgets/tab_widgets.dart';
 
 /// 建立/編輯Scroller頁面
 /// 提供完整的Scroller設定界面，包含樣式和效果設定
@@ -107,7 +108,7 @@ class _CreateScreenState extends ConsumerState<CreateScreen> with SingleTickerPr
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF1A1A2E), // 深色背景，匹配設計稿
+      backgroundColor: const Color(0xFF1A1A2E),
       appBar: AppBar(
         title: Text(_isEditing ? 'Edit Led Scroller' : 'Create Led Scroller'),
         backgroundColor: Colors.transparent,
@@ -129,7 +130,7 @@ class _CreateScreenState extends ConsumerState<CreateScreen> with SingleTickerPr
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // 預覽卡片 - 紫色背景
+              // 預覽卡片
               Container(
                 height: 120,
                 decoration: BoxDecoration(
@@ -163,7 +164,7 @@ class _CreateScreenState extends ConsumerState<CreateScreen> with SingleTickerPr
                 ),
               ),
 
-              // 文字輸入區域 - 根據Figma設計，沒有計數器
+              // 文字輸入區域
               const SizedBox(height: 16),
               TextField(
                 controller: _textController,
@@ -211,8 +212,22 @@ class _CreateScreenState extends ConsumerState<CreateScreen> with SingleTickerPr
                         child: TabBarView(
                           controller: _tabController,
                           children: [
-                            _buildStyleTab(),
-                            _buildEffectTab(),
+                            StyleTab(
+                              fontSize: _fontSize,
+                              fontFamily: _fontFamily,
+                              textColor: _textColor,
+                              onFontSizeChanged: (size) => setState(() => _fontSize = size),
+                              onFontFamilyChanged: (family) => setState(() => _fontFamily = family),
+                              onTextColorChanged: (color) => setState(() => _textColor = color),
+                            ),
+                            EffectTab(
+                              direction: _direction,
+                              speed: _speed,
+                              ledBackgroundOn: _ledBackgroundOn,
+                              onDirectionChanged: (dir) => setState(() => _direction = dir),
+                              onSpeedChanged: (spd) => setState(() => _speed = spd),
+                              onLedBackgroundChanged: (isOn) => setState(() => _ledBackgroundOn = isOn),
+                            ),
                           ],
                         ),
                       ),
@@ -278,274 +293,6 @@ class _CreateScreenState extends ConsumerState<CreateScreen> with SingleTickerPr
                 ],
               ),
             ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildStyleTab() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // 字體大小
-          const Text('Size', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
-          const SizedBox(height: 8),
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: [20, 40, 60, 80, 100].map((size) {
-                final isSelected = _fontSize == size;
-                return Padding(
-                  padding: const EdgeInsets.only(right: 8.0),
-                  child: InkWell(
-                    onTap: () {
-                      setState(() {
-                        _fontSize = size;
-                      });
-                    },
-                    child: Container(
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(
-                        color: isSelected ? Colors.purple : Colors.transparent,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: isSelected ? Colors.purple : Colors.grey.withOpacity(0.5),
-                        ),
-                      ),
-                      child: Center(
-                        child: Text(
-                          '$size',
-                          style: TextStyle(
-                            color: isSelected ? Colors.white : Colors.grey,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                );
-              }).toList(),
-            ),
-          ),
-          const SizedBox(height: 24),
-
-          // 字體選擇
-          const Text('Fonts', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
-          const SizedBox(height: 8),
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: [
-                _buildFontOption('Roboto', 'Aa'),
-                _buildFontOption('Arial', 'Aa'),
-                _buildFontOption('Times New Roman', 'Aa'),
-                _buildFontOption('Courier New', 'Aa'),
-                _buildFontOption('Georgia', 'Aa'),
-              ],
-            ),
-          ),
-          const SizedBox(height: 24),
-
-          // 文字顏色
-          const Text('Text Color', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
-          const SizedBox(height: 8),
-          ColorPicker(
-            currentColor: _textColor,
-            onColorSelected: (color) {
-              setState(() {
-                _textColor = color;
-              });
-            },
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildEffectTab() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // 方向按鈕
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              _buildDirectionButton(ScrollDirection.right, Icons.arrow_forward),
-              _buildDirectionButton(ScrollDirection.left, Icons.arrow_back),
-              _buildDirectionButton(ScrollDirection.up, Icons.arrow_upward),
-              _buildDirectionButton(ScrollDirection.down, Icons.arrow_downward),
-            ],
-          ),
-          const SizedBox(height: 32),
-
-          // 速度按鈕
-          const Text('Speed Scroll', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
-          const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              _buildSpeedButton(0, "0"),
-              _buildSpeedButton(3, "0.5x"),
-              _buildSpeedButton(5, "1x"),
-              _buildSpeedButton(8, "5x"),
-              _buildSpeedButton(10, "10x"),
-            ],
-          ),
-          const SizedBox(height: 32),
-
-          // LED背景選項
-          const Text('Led background', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              _buildLedBackgroundButton(false, "Off"),
-              const SizedBox(width: 16),
-              _buildLedBackgroundButton(true, "On"),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildFontOption(String fontName, String sample) {
-    final isSelected = _fontFamily == fontName;
-
-    return Padding(
-      padding: const EdgeInsets.only(right: 8.0),
-      child: InkWell(
-        onTap: () {
-          setState(() {
-            _fontFamily = fontName;
-          });
-        },
-        child: Container(
-          width: 48,
-          height: 48,
-          decoration: BoxDecoration(
-            border: Border.all(
-              color: isSelected ? Colors.purple : Colors.grey.withOpacity(0.5),
-              width: isSelected ? 2 : 1,
-            ),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Center(
-            child: Text(
-              sample,
-              style: TextStyle(
-                fontFamily: fontName,
-                color: isSelected ? Colors.purple : Colors.grey,
-                fontSize: 16,
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDirectionButton(ScrollDirection dir, IconData icon) {
-    final isSelected = _direction == dir;
-
-    return Container(
-      width: 60,
-      height: 60,
-      decoration: BoxDecoration(
-        color: Colors.transparent,
-        border: Border.all(color: Colors.white.withOpacity(0.3), width: 1),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Material(
-        color: isSelected ? Colors.purple.withOpacity(0.3) : Colors.transparent,
-        borderRadius: BorderRadius.circular(12),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(12),
-          onTap: () {
-            setState(() {
-              _direction = dir;
-            });
-          },
-          child: Center(
-            child: Icon(
-              icon,
-              color: isSelected ? Colors.white : Colors.white.withOpacity(0.7),
-              size: 24,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSpeedButton(int spd, String label) {
-    final isSelected = _speed == spd;
-
-    return Container(
-      width: 60,
-      height: 60,
-      decoration: BoxDecoration(
-        color: Colors.transparent,
-        border: Border.all(color: Colors.white.withOpacity(0.3), width: 1),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Material(
-        color: isSelected ? Colors.purple.withOpacity(0.3) : Colors.transparent,
-        borderRadius: BorderRadius.circular(12),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(12),
-          onTap: () {
-            setState(() {
-              _speed = spd;
-            });
-          },
-          child: Center(
-            child: Text(
-              label,
-              style: TextStyle(
-                color: isSelected ? Colors.white : Colors.white.withOpacity(0.7),
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildLedBackgroundButton(bool isOn, String label) {
-    final isSelected = isOn == _ledBackgroundOn;
-
-    return Container(
-      width: 60,
-      height: 60,
-      decoration: BoxDecoration(
-        color: Colors.transparent,
-        border: Border.all(color: Colors.white.withOpacity(0.3), width: 1),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Material(
-        color: isSelected ? Colors.purple.withOpacity(0.3) : Colors.transparent,
-        borderRadius: BorderRadius.circular(12),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(12),
-          onTap: () {
-            setState(() {
-              _ledBackgroundOn = isOn;
-            });
-          },
-          child: Center(
-            child: Text(
-              label,
-              style: TextStyle(
-                color: isSelected ? Colors.white : Colors.white.withOpacity(0.7),
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-              ),
-            ),
           ),
         ),
       ),

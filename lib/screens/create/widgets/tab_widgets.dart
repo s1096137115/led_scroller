@@ -2,9 +2,8 @@ import 'package:flutter/material.dart';
 import '../../../models/scroller.dart';
 import 'color_picker.dart';
 
-/// 樣式標籤頁組件
-/// 顯示字體大小、字體選擇和顏色設定選項
-class StyleTabWidget extends StatelessWidget {
+/// Style 標籤內容組件
+class StyleTab extends StatelessWidget {
   final int fontSize;
   final String fontFamily;
   final String textColor;
@@ -12,7 +11,7 @@ class StyleTabWidget extends StatelessWidget {
   final Function(String) onFontFamilyChanged;
   final Function(String) onTextColorChanged;
 
-  const StyleTabWidget({
+  const StyleTab({
     Key? key,
     required this.fontSize,
     required this.fontFamily,
@@ -25,6 +24,7 @@ class StyleTabWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
+      padding: const EdgeInsets.all(16.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -38,7 +38,7 @@ class StyleTabWidget extends StatelessWidget {
                 final isSelected = fontSize == size;
                 return Padding(
                   padding: const EdgeInsets.only(right: 8.0),
-                  child: InkWell(
+                  child: GestureDetector(
                     onTap: () => onFontSizeChanged(size),
                     child: Container(
                       width: 44,
@@ -100,7 +100,7 @@ class StyleTabWidget extends StatelessWidget {
 
     return Padding(
       padding: const EdgeInsets.only(right: 8.0),
-      child: InkWell(
+      child: GestureDetector(
         onTap: () => onFontFamilyChanged(fontName),
         child: Container(
           width: 48,
@@ -128,9 +128,8 @@ class StyleTabWidget extends StatelessWidget {
   }
 }
 
-/// 效果標籤頁組件
-/// 顯示滾動方向、速度和LED背景設定選項
-class EffectTabWidget extends StatelessWidget {
+/// Effect 標籤內容組件
+class EffectTab extends StatelessWidget {
   final ScrollDirection direction;
   final int speed;
   final bool ledBackgroundOn;
@@ -138,7 +137,7 @@ class EffectTabWidget extends StatelessWidget {
   final Function(int) onSpeedChanged;
   final Function(bool) onLedBackgroundChanged;
 
-  const EffectTabWidget({
+  const EffectTab({
     Key? key,
     required this.direction,
     required this.speed,
@@ -200,20 +199,19 @@ class EffectTabWidget extends StatelessWidget {
   Widget _buildDirectionButton(ScrollDirection dir, IconData icon) {
     final isSelected = direction == dir;
 
-    return Container(
-      width: 60,
-      height: 60,
-      decoration: BoxDecoration(
-        color: Colors.transparent,
-        border: Border.all(color: Colors.white.withOpacity(0.3), width: 1),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Material(
-        color: isSelected ? Colors.purple.withOpacity(0.3) : Colors.transparent,
-        borderRadius: BorderRadius.circular(12),
-        child: InkWell(
+    return GestureDetector(
+      onTap: () => onDirectionChanged(dir),
+      child: Container(
+        width: 60,
+        height: 60,
+        decoration: BoxDecoration(
+          color: Colors.transparent,
+          border: Border.all(color: Colors.white.withOpacity(0.3), width: 1),
           borderRadius: BorderRadius.circular(12),
-          onTap: () => onDirectionChanged(dir),
+        ),
+        child: Material(
+          color: isSelected ? Colors.purple.withOpacity(0.3) : Colors.transparent,
+          borderRadius: BorderRadius.circular(12),
           child: Center(
             child: Icon(
               icon,
@@ -229,20 +227,19 @@ class EffectTabWidget extends StatelessWidget {
   Widget _buildSpeedButton(int spd, String label) {
     final isSelected = speed == spd;
 
-    return Container(
-      width: 60,
-      height: 60,
-      decoration: BoxDecoration(
-        color: Colors.transparent,
-        border: Border.all(color: Colors.white.withOpacity(0.3), width: 1),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Material(
-        color: isSelected ? Colors.purple.withOpacity(0.3) : Colors.transparent,
-        borderRadius: BorderRadius.circular(12),
-        child: InkWell(
+    return GestureDetector(
+      onTap: () => onSpeedChanged(spd),
+      child: Container(
+        width: 60,
+        height: 60,
+        decoration: BoxDecoration(
+          color: Colors.transparent,
+          border: Border.all(color: Colors.white.withOpacity(0.3), width: 1),
           borderRadius: BorderRadius.circular(12),
-          onTap: () => onSpeedChanged(spd),
+        ),
+        child: Material(
+          color: isSelected ? Colors.purple.withOpacity(0.3) : Colors.transparent,
+          borderRadius: BorderRadius.circular(12),
           child: Center(
             child: Text(
               label,
@@ -260,20 +257,19 @@ class EffectTabWidget extends StatelessWidget {
   Widget _buildLedBackgroundButton(bool isOn, String label) {
     final isSelected = isOn == ledBackgroundOn;
 
-    return Container(
-      width: 60,
-      height: 60,
-      decoration: BoxDecoration(
-        color: Colors.transparent,
-        border: Border.all(color: Colors.white.withOpacity(0.3), width: 1),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Material(
-        color: isSelected ? Colors.purple.withOpacity(0.3) : Colors.transparent,
-        borderRadius: BorderRadius.circular(12),
-        child: InkWell(
+    return GestureDetector(
+      onTap: () => onLedBackgroundChanged(isOn),
+      child: Container(
+        width: 60,
+        height: 60,
+        decoration: BoxDecoration(
+          color: Colors.transparent,
+          border: Border.all(color: Colors.white.withOpacity(0.3), width: 1),
           borderRadius: BorderRadius.circular(12),
-          onTap: () => onLedBackgroundChanged(isOn),
+        ),
+        child: Material(
+          color: isSelected ? Colors.purple.withOpacity(0.3) : Colors.transparent,
+          borderRadius: BorderRadius.circular(12),
           child: Center(
             child: Text(
               label,
