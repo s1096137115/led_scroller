@@ -30,6 +30,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // 添加 "Led Scroller" 標題
+              const Padding(
+                padding: EdgeInsets.only(bottom: 16.0),
+                child: Text(
+                  'Led Scroller',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+
               // App Logo and Create New Button
               Card(
                 child: Padding(
@@ -64,7 +76,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ),
               const SizedBox(height: 24),
 
-              // My Collections Section with Action Buttons (Updated UI)
+              // My Collections Section with Action Buttons
               const Text(
                 'My collections',
                 style: TextStyle(
@@ -138,28 +150,38 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 const SizedBox(height: 8),
               ],
 
-              // Scrollers List or Empty State
+              // 將整個列表放入一個帶框的 Card 中
               Expanded(
-                child: scrollers.isEmpty
-                    ? _buildEmptyState()
-                    : ListView.builder(
-                  itemCount: scrollers.length,
-                  itemBuilder: (context, index) {
-                    final scroller = scrollers[index];
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 8.0),
-                      child: _isSelectionMode
-                          ? _buildSelectableCard(scroller)
-                          : ScrollerCard(
-                        scroller: scroller,
-                        onEdit: () {
-                          // Set current scroller for editing
-                          ref.read(currentScrollerProvider.notifier).state = scroller;
-                          context.push('/create');
-                        },
-                      ),
-                    );
-                  },
+                child: Card(
+                  margin: const EdgeInsets.only(top: 8.0),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  color: const Color(0xFF2A2A3E), // 設定與設計稿相符的深色背景
+                  child: Padding(
+                    padding: const EdgeInsets.all(12.0),
+                    child: scrollers.isEmpty
+                        ? _buildEmptyState()
+                        : ListView.builder(
+                      itemCount: scrollers.length,
+                      itemBuilder: (context, index) {
+                        final scroller = scrollers[index];
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 8.0),
+                          child: _isSelectionMode
+                              ? _buildSelectableCard(scroller)
+                              : ScrollerCard(
+                            scroller: scroller,
+                            onEdit: () {
+                              // Set current scroller for editing
+                              ref.read(currentScrollerProvider.notifier).state = scroller;
+                              context.push('/create');
+                            },
+                          ),
+                        );
+                      },
+                    ),
+                  ),
                 ),
               ),
             ],

@@ -111,3 +111,9 @@
 - HomeScreen UI 優化 (新增多選刪除功能，與設計圖對齊)
 - ScrollerCard 視覺調整 (改善卡片呈現方式)
 - 批量刪除功能實作 (支援一次刪除多個項目)
+
+### 已完成 [2025-03-04 18:30:30]
+- HomeScreen UI 優化:添加了 "Led Scroller" 標題在頁面頂部
+- HomeScreen UI 優化:將整個 Scroller 列表包裹在一個 Card 組件中，添加了圓角邊框
+- HomeScreen UI 優化:為列表 Card 設置了與設計稿相符的深色背景 (Color(0xFF2A2A3E))
+- HomeScreen UI 優化:調整了內部填充，使得整體佈局更加協調
