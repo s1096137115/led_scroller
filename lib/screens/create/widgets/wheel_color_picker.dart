@@ -3,94 +3,149 @@ import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 
 /// LED應用的顏色選擇器組件
 /// 用於設定文字和背景顏色
+/// 提供預設顏色選項和圓盤式自定義顏色選擇器
+/// 根據Figma設計實現顏色排序和選中效果
+/// 區分文字顏色和背景顏色的選項列表
 class LedColorPicker extends StatelessWidget {
   final String currentColor;
   final ValueChanged<String> onColorSelected;
+  final bool isTextColor; // 是否為文字顏色選擇器
 
   const LedColorPicker({
     Key? key,
     required this.currentColor,
     required this.onColorSelected,
+    this.isTextColor = true, // 預設為文字顏色選擇器
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    // 預設顏色選項
-    final colorOptions = [
-      '#FFFFFF', // White
-      '#000000', // Black
-      '#FF5733', // Red/Orange
-      '#E91E63', // Pink
-      '#9C27B0', // Purple
-      '#673AB7', // Deep Purple
-      '#3F51B5', // Indigo
-      '#2196F3', // Blue
-      '#03A9F4', // Light Blue
-      '#00BCD4', // Cyan
-    ];
+    List<String> colorOptions;
+
+    // 根據類型選擇對應的顏色列表
+    if (isTextColor) {
+      // 文字顏色列表，按照Figma設計排序
+      colorOptions = [
+        '#FFFFFF', // White
+        // Color wheel is not part of this list
+        '#000000', // Black
+        '#F44336', // Red
+        '#FF9800', // Orange
+        '#FFEB3B', // Yellow
+        '#4CAF50', // Green
+        '#2196F3', // Blue
+        '#00BCD4', // Light Blue
+        '#3F51B5', // Deep Blue
+        '#9C27B0', // Purple
+      ];
+    } else {
+      // 背景顏色列表，按照Figma設計排序，黑白位置調換
+      colorOptions = [
+        '#9C27B0', // Purple
+        // Color wheel is not part of this list
+        '#F44336', // Red
+        '#FF9800', // Orange
+        '#FFEB3B', // Yellow
+        '#4CAF50', // Green
+        '#2196F3', // Blue
+        '#00BCD4', // Light Blue
+        '#3F51B5', // Deep Blue
+        '#000000', // Black
+        '#FFFFFF', // White
+      ];
+    }
 
     final normalizedColor = currentColor.toUpperCase();
-    final isCustomColor = !colorOptions.contains(normalizedColor);
+
+    // 檢查當前顏色是否為預設顏色之一
+    bool isCustomColor = true;
+    for (final color in colorOptions) {
+      if (_compareColors(normalizedColor, color)) {
+        isCustomColor = false;
+        break;
+      }
+    }
 
     return Wrap(
       spacing: 10,
       runSpacing: 10,
       children: [
-        // 白色按鈕
+        // 第一個顏色按鈕
         _buildColorButton(
-          color: '#FFFFFF',
-          isSelected: normalizedColor == '#FFFFFF',
-          onTap: () => onColorSelected('#FFFFFF'),
-          foregroundColor: Colors.black,
-        ),
-
-        // 黑色按鈕
-        _buildColorButton(
-          color: '#000000',
-          isSelected: normalizedColor == '#000000',
-          onTap: () => onColorSelected('#000000'),
-          foregroundColor: Colors.white,
+          color: colorOptions[0],
+          isSelected: _compareColors(normalizedColor, colorOptions[0]),
+          onTap: () => onColorSelected(colorOptions[0]),
         ),
 
         // 自定義顏色選擇器
         GestureDetector(
           onTap: () => _showColorPickerDialog(context),
           child: Container(
-            width: 36,
-            height: 36,
+            width: isCustomColor ? 40 : 36,
+            height: isCustomColor ? 40 : 36,
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(18),
-              gradient: const SweepGradient(
-                colors: [
-                  Colors.red,
-                  Colors.orange,
-                  Colors.yellow,
-                  Colors.green,
-                  Colors.blue,
-                  Colors.indigo,
-                  Colors.purple,
-                  Colors.red,
-                ],
-              ),
+              borderRadius: BorderRadius.circular(isCustomColor ? 12 : 8),
+              color: isCustomColor ? Colors.transparent : null,
               border: Border.all(
-                color: isCustomColor ? Colors.blue : Colors.white,
-                width: isCustomColor ? 2 : 1,
+                color: isCustomColor ? Colors.grey.shade500 : Colors.transparent,
+                width: isCustomColor ? 2 : 0,
               ),
             ),
-            child: isCustomColor
-                ? const Icon(Icons.check, color: Colors.white, size: 18)
-                : const Icon(Icons.color_lens, color: Colors.white, size: 20),
+            child: Center(
+              child: Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(16),
+                  gradient: const SweepGradient(
+                    colors: [
+                      Colors.red,
+                      Colors.orange,
+                      Colors.yellow,
+                      Colors.green,
+                      Colors.blue,
+                      Colors.indigo,
+                      Colors.purple,
+                      Colors.red,
+                    ],
+                  ),
+                ),
+              ),
+            ),
           ),
         ),
 
-        // 其他預設顏色選項
-        for (final colorCode in colorOptions.skip(2))
+        // 剩餘的預設顏色按鈕
+        for (int i = 1; i < colorOptions.length; i++)
           _buildColorButton(
-            color: colorCode,
-            isSelected: normalizedColor == colorCode,
-            onTap: () => onColorSelected(colorCode),
+            color: colorOptions[i],
+            isSelected: _compareColors(normalizedColor, colorOptions[i]),
+            onTap: () => onColorSelected(colorOptions[i]),
           ),
       ],
+    );
+  }
+
+  // 更新 StyleTab 中使用的方法，傳遞適當的 isTextColor 參數
+  static Widget buildTextColorPicker({
+    required String currentColor,
+    required ValueChanged<String> onColorSelected,
+  }) {
+    return LedColorPicker(
+      currentColor: currentColor,
+      onColorSelected: onColorSelected,
+      isTextColor: true,
+    );
+  }
+
+  static Widget buildBackgroundColorPicker({
+    required String currentColor,
+    required ValueChanged<String> onColorSelected,
+  }) {
+    return LedColorPicker(
+      currentColor: currentColor,
+      onColorSelected: onColorSelected,
+      isTextColor: false,
     );
   }
 
@@ -99,30 +154,32 @@ class LedColorPicker extends StatelessWidget {
     required String color,
     required bool isSelected,
     required VoidCallback onTap,
-    Color? foregroundColor,
   }) {
     final colorValue = _parseColor(color);
-    final iconColor = foregroundColor ??
-        (ThemeData.estimateBrightnessForColor(colorValue) == Brightness.dark
-            ? Colors.white
-            : Colors.black);
 
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        width: 36,
-        height: 36,
+        width: isSelected ? 40 : 36,
+        height: isSelected ? 40 : 36,
         decoration: BoxDecoration(
-          color: colorValue,
-          borderRadius: BorderRadius.circular(18),
+          color: isSelected ? Colors.transparent : null,
+          borderRadius: BorderRadius.circular(isSelected ? 12 : 8),
           border: Border.all(
-            color: isSelected ? Colors.blue : Colors.transparent,
-            width: 2,
+            color: isSelected ? Colors.grey.shade500 : Colors.transparent,
+            width: isSelected ? 2 : 0,
           ),
         ),
-        child: isSelected
-            ? Icon(Icons.check, color: iconColor, size: 18)
-            : null,
+        child: Center(
+          child: Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              color: colorValue,
+              borderRadius: BorderRadius.circular(16),
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -136,7 +193,27 @@ class LedColorPicker extends StatelessWidget {
     }
   }
 
-  // 顯示顏色選擇對話框
+  // 比較兩個顏色是否相同
+  // 允許一定的誤差，因為從ColorPicker選擇的顏色可能與預設顏色略有不同
+  bool _compareColors(String color1, String color2) {
+    try {
+      final c1 = _parseColor(color1);
+      final c2 = _parseColor(color2);
+
+      // 直接比較十六進制值
+      if (color1 == color2) return true;
+
+      // 允許少量色差
+      const tolerance = 5;
+      return (c1.red - c2.red).abs() <= tolerance &&
+          (c1.green - c2.green).abs() <= tolerance &&
+          (c1.blue - c2.blue).abs() <= tolerance;
+    } catch (e) {
+      return color1 == color2;
+    }
+  }
+
+  // 顯示圓盤式顏色選擇對話框
   void _showColorPickerDialog(BuildContext context) {
     // 解析當前顏色
     Color pickerColor = _parseColor(currentColor);
@@ -166,8 +243,10 @@ class LedColorPicker extends StatelessWidget {
               onColorChanged: (color) {
                 resultColor = color;
               },
+              paletteType: PaletteType.hueWheel, // 使用圓盤式顏色選擇器
               enableAlpha: false,
-              labelTypes: const [],
+              labelTypes: const [], // 簡化UI，不顯示標籤
+              pickerAreaHeightPercent: 0.8, // 增加顏色選擇區域的高度百分比
             ),
           ),
           actions: [

@@ -1,299 +1,250 @@
 import 'package:flutter/material.dart';
-import '../../../models/scroller.dart';
-import 'wheel_color_picker.dart';
+import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 
-/// Style 標籤內容組件
-class StyleTab extends StatelessWidget {
-  final int fontSize;
-  final String fontFamily;
-  final String textColor;
-  final String backgroundColor;
-  final Function(int) onFontSizeChanged;
-  final Function(String) onFontFamilyChanged;
-  final Function(String) onTextColorChanged;
-  final Function(String) onBackgroundColorChanged;
+/// LED應用的顏色選擇器組件
+/// 用於設定文字和背景顏色
+/// 提供預設顏色選項和圓盤式自定義顏色選擇器
+/// 根據Figma設計實現顏色排序和選中效果
+/// 區分文字顏色和背景顏色的選項列表
+class LedColorPicker extends StatelessWidget {
+  final String currentColor;
+  final ValueChanged<String> onColorSelected;
+  final bool isTextColor; // 是否為文字顏色選擇器
 
-  const StyleTab({
+  const LedColorPicker({
     Key? key,
-    required this.fontSize,
-    required this.fontFamily,
-    required this.textColor,
-    required this.backgroundColor,
-    required this.onFontSizeChanged,
-    required this.onFontFamilyChanged,
-    required this.onTextColorChanged,
-    required this.onBackgroundColorChanged,
+    required this.currentColor,
+    required this.onColorSelected,
+    this.isTextColor = true, // 預設為文字顏色選擇器
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // 字體大小
-          const Text('Size', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
-          const SizedBox(height: 8),
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: [20, 40, 60, 80, 100].map((size) {
-                final isSelected = fontSize == size;
-                return Padding(
-                  padding: const EdgeInsets.only(right: 8.0),
-                  child: GestureDetector(
-                    onTap: () => onFontSizeChanged(size),
-                    child: Container(
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(
-                        color: isSelected ? Colors.purple : Colors.transparent,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: isSelected ? Colors.purple : Colors.grey.withOpacity(0.5),
-                        ),
-                      ),
-                      child: Center(
-                        child: Text(
-                          '$size',
-                          style: TextStyle(
-                            color: isSelected ? Colors.white : Colors.grey,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                );
-              }).toList(),
-            ),
-          ),
-          const SizedBox(height: 24),
+    List<String> colorOptions;
 
-          // 字體選擇
-          const Text('Fonts', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
-          const SizedBox(height: 8),
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: [
-                _buildFontOption('Roboto', 'Aa'),
-                _buildFontOption('Arial', 'Aa'),
-                _buildFontOption('Times New Roman', 'Aa'),
-                _buildFontOption('Courier New', 'Aa'),
-                _buildFontOption('Georgia', 'Aa'),
-              ],
-            ),
-          ),
-          const SizedBox(height: 24),
+    // 根據類型選擇對應的顏色列表
+    if (isTextColor) {
+      // 文字顏色列表，按照Figma設計排序
+      colorOptions = [
+        '#FFFFFF', // White
+        // Color wheel is not part of this list
+        '#000000', // Black
+        '#F44336', // Red
+        '#FF9800', // Orange
+        '#FFEB3B', // Yellow
+        '#4CAF50', // Green
+        '#2196F3', // Blue
+        '#00BCD4', // Light Blue
+        '#3F51B5', // Deep Blue
+        '#9C27B0', // Purple
+      ];
+    } else {
+      // 背景顏色列表，按照Figma設計排序，黑白位置調換
+      colorOptions = [
+        '#9C27B0', // Purple
+        // Color wheel is not part of this list
+        '#F44336', // Red
+        '#FF9800', // Orange
+        '#FFEB3B', // Yellow
+        '#4CAF50', // Green
+        '#2196F3', // Blue
+        '#00BCD4', // Light Blue
+        '#3F51B5', // Deep Blue
+        '#000000', // Black
+        '#FFFFFF', // White
+      ];
+    }
 
-          // 文字顏色
-          const Text('Text Color', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
-          const SizedBox(height: 8),
-          LedColorPicker(
-            currentColor: textColor,
-            onColorSelected: onTextColorChanged,
-          ),
-          const SizedBox(height: 24),
+    final normalizedColor = currentColor.toUpperCase();
 
-          // 背景顏色 (新增)
-          const Text('Background Color', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
-          const SizedBox(height: 8),
-          LedColorPicker(
-            currentColor: backgroundColor,
-            onColorSelected: onBackgroundColorChanged,
-          ),
-        ],
-      ),
-    );
-  }
+    // 檢查當前顏色是否為預設顏色之一
+    bool isCustomColor = true;
+    for (final color in colorOptions) {
+      if (_compareColors(normalizedColor, color)) {
+        isCustomColor = false;
+        break;
+      }
+    }
 
-  Widget _buildFontOption(String fontName, String sample) {
-    final isSelected = fontFamily == fontName;
+    return Wrap(
+      spacing: 16, // 增加間距以適應更大的選中尺寸
+      runSpacing: 16, // 增加間距以適應更大的選中尺寸
+      children: [
+        // 第一個顏色按鈕
+        _buildColorButton(
+          color: colorOptions[0],
+          isSelected: _compareColors(normalizedColor, colorOptions[0]),
+          onTap: () => onColorSelected(colorOptions[0]),
+        ),
 
-    return Padding(
-      padding: const EdgeInsets.only(right: 8.0),
-      child: GestureDetector(
-        onTap: () => onFontFamilyChanged(fontName),
-        child: Container(
-          width: 48,
-          height: 48,
-          decoration: BoxDecoration(
-            border: Border.all(
-              color: isSelected ? Colors.purple : Colors.grey.withOpacity(0.5),
-              width: isSelected ? 2 : 1,
-            ),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Center(
-            child: Text(
-              sample,
-              style: TextStyle(
-                fontFamily: fontName,
-                color: isSelected ? Colors.purple : Colors.grey,
-                fontSize: 16,
+        // 自定義顏色選擇器
+        GestureDetector(
+          onTap: () => _showColorPickerDialog(context),
+          child: Container(
+            width: isCustomColor ? 60.0 : 40.0,
+            height: isCustomColor ? 60.0 : 40.0,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: const SweepGradient(
+                colors: [
+                  Colors.red,
+                  Colors.orange,
+                  Colors.yellow,
+                  Colors.green,
+                  Colors.blue,
+                  Colors.indigo,
+                  Colors.purple,
+                  Colors.red,
+                ],
               ),
+              border: isCustomColor ? Border.all(
+                color: Colors.white,
+                width: 2,
+              ) : null,
             ),
           ),
         ),
-      ),
-    );
-  }
-}
 
-/// Effect 標籤內容組件
-class EffectTab extends StatelessWidget {
-  final ScrollDirection direction;
-  final int speed;
-  final bool ledBackgroundOn;
-  final Function(ScrollDirection) onDirectionChanged;
-  final Function(int) onSpeedChanged;
-  final Function(bool) onLedBackgroundChanged;
-
-  const EffectTab({
-    Key? key,
-    required this.direction,
-    required this.speed,
-    required this.ledBackgroundOn,
-    required this.onDirectionChanged,
-    required this.onSpeedChanged,
-    required this.onLedBackgroundChanged,
-  }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // 方向按鈕
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              _buildDirectionButton(ScrollDirection.right, Icons.arrow_forward),
-              _buildDirectionButton(ScrollDirection.left, Icons.arrow_back),
-              _buildDirectionButton(ScrollDirection.up, Icons.arrow_upward),
-              _buildDirectionButton(ScrollDirection.down, Icons.arrow_downward),
-            ],
+        // 剩餘的預設顏色按鈕
+        for (int i = 1; i < colorOptions.length; i++)
+          _buildColorButton(
+            color: colorOptions[i],
+            isSelected: _compareColors(normalizedColor, colorOptions[i]),
+            onTap: () => onColorSelected(colorOptions[i]),
           ),
-          const SizedBox(height: 32),
-
-          // 速度按鈕
-          const Text('Speed Scroll', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
-          const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              _buildSpeedButton(0, "0"),
-              _buildSpeedButton(3, "0.5x"),
-              _buildSpeedButton(5, "1x"),
-              _buildSpeedButton(8, "5x"),
-              _buildSpeedButton(10, "10x"),
-            ],
-          ),
-          const SizedBox(height: 32),
-
-          // LED背景選項
-          const Text('Led background', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              _buildLedBackgroundButton(false, "Off"),
-              const SizedBox(width: 16),
-              _buildLedBackgroundButton(true, "On"),
-            ],
-          ),
-        ],
-      ),
+      ],
     );
   }
 
-  Widget _buildDirectionButton(ScrollDirection dir, IconData icon) {
-    final isSelected = direction == dir;
+  // 更新 StyleTab 中使用的方法，傳遞適當的 isTextColor 參數
+  static Widget buildTextColorPicker({
+    required String currentColor,
+    required ValueChanged<String> onColorSelected,
+  }) {
+    return LedColorPicker(
+      currentColor: currentColor,
+      onColorSelected: onColorSelected,
+      isTextColor: true,
+    );
+  }
+
+  static Widget buildBackgroundColorPicker({
+    required String currentColor,
+    required ValueChanged<String> onColorSelected,
+  }) {
+    return LedColorPicker(
+      currentColor: currentColor,
+      onColorSelected: onColorSelected,
+      isTextColor: false,
+    );
+  }
+
+  // 構建顏色按鈕
+  Widget _buildColorButton({
+    required String color,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    final colorValue = _parseColor(color);
+    final double buttonSize = isSelected ? 60.0 : 40.0; // 選中後變大
 
     return GestureDetector(
-      onTap: () => onDirectionChanged(dir),
+      onTap: onTap,
       child: Container(
-        width: 60,
-        height: 60,
+        width: buttonSize,
+        height: buttonSize,
         decoration: BoxDecoration(
-          color: Colors.transparent,
-          border: Border.all(color: Colors.white.withOpacity(0.3), width: 1),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Material(
-          color: isSelected ? Colors.purple.withOpacity(0.3) : Colors.transparent,
-          borderRadius: BorderRadius.circular(12),
-          child: Center(
-            child: Icon(
-              icon,
-              color: isSelected ? Colors.white : Colors.white.withOpacity(0.7),
-              size: 24,
-            ),
-          ),
+          shape: BoxShape.circle,
+          color: colorValue,
+          border: isSelected ? Border.all(
+            color: Colors.white,
+            width: 2,
+          ) : null,
         ),
       ),
     );
   }
 
-  Widget _buildSpeedButton(int spd, String label) {
-    final isSelected = speed == spd;
-
-    return GestureDetector(
-      onTap: () => onSpeedChanged(spd),
-      child: Container(
-        width: 60,
-        height: 60,
-        decoration: BoxDecoration(
-          color: Colors.transparent,
-          border: Border.all(color: Colors.white.withOpacity(0.3), width: 1),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Material(
-          color: isSelected ? Colors.purple.withOpacity(0.3) : Colors.transparent,
-          borderRadius: BorderRadius.circular(12),
-          child: Center(
-            child: Text(
-              label,
-              style: TextStyle(
-                color: isSelected ? Colors.white : Colors.white.withOpacity(0.7),
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
+  // 安全解析顏色
+  Color _parseColor(String hexColor) {
+    try {
+      return Color(int.parse(hexColor.replaceAll('#', '0xFF')));
+    } catch (e) {
+      return Colors.purple; // 預設顏色
+    }
   }
 
-  Widget _buildLedBackgroundButton(bool isOn, String label) {
-    final isSelected = isOn == ledBackgroundOn;
+  // 比較兩個顏色是否相同
+  // 允許一定的誤差，因為從ColorPicker選擇的顏色可能與預設顏色略有不同
+  bool _compareColors(String color1, String color2) {
+    try {
+      final c1 = _parseColor(color1);
+      final c2 = _parseColor(color2);
 
-    return GestureDetector(
-      onTap: () => onLedBackgroundChanged(isOn),
-      child: Container(
-        width: 60,
-        height: 60,
-        decoration: BoxDecoration(
-          color: Colors.transparent,
-          border: Border.all(color: Colors.white.withOpacity(0.3), width: 1),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Material(
-          color: isSelected ? Colors.purple.withOpacity(0.3) : Colors.transparent,
-          borderRadius: BorderRadius.circular(12),
-          child: Center(
-            child: Text(
-              label,
-              style: TextStyle(
-                color: isSelected ? Colors.white : Colors.white.withOpacity(0.7),
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-              ),
+      // 直接比較十六進制值
+      if (color1 == color2) return true;
+
+      // 允許少量色差
+      const tolerance = 5;
+      return (c1.red - c2.red).abs() <= tolerance &&
+          (c1.green - c2.green).abs() <= tolerance &&
+          (c1.blue - c2.blue).abs() <= tolerance;
+    } catch (e) {
+      return color1 == color2;
+    }
+  }
+
+  // 顯示圓盤式顏色選擇對話框
+  void _showColorPickerDialog(BuildContext context) {
+    // 解析當前顏色
+    Color pickerColor = _parseColor(currentColor);
+    Color resultColor = pickerColor;
+
+    // 顏色轉換為十六進制
+    String colorToHex(Color color) {
+      return '#${color.red.toRadixString(16).padLeft(2, '0')}'
+          '${color.green.toRadixString(16).padLeft(2, '0')}'
+          '${color.blue.toRadixString(16).padLeft(2, '0')}';
+    }
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('選擇顏色'),
+          backgroundColor: const Color(0xFF24243D),
+          titleTextStyle: const TextStyle(
+            color: Colors.white,
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
+          content: SingleChildScrollView(
+            child: ColorPicker(
+              pickerColor: pickerColor,
+              onColorChanged: (color) {
+                resultColor = color;
+              },
+              paletteType: PaletteType.hueWheel, // 使用圓盤式顏色選擇器
+              enableAlpha: false,
+              labelTypes: const [], // 簡化UI，不顯示標籤
+              pickerAreaHeightPercent: 0.8, // 增加顏色選擇區域的高度百分比
             ),
           ),
-        ),
-      ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('取消', style: TextStyle(color: Colors.white70)),
+            ),
+            TextButton(
+              onPressed: () {
+                onColorSelected(colorToHex(resultColor).toUpperCase());
+                Navigator.of(context).pop();
+              },
+              child: const Text('確認', style: TextStyle(color: Colors.white)),
+            ),
+          ],
+        );
+      },
     );
   }
 }
