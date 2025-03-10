@@ -2,35 +2,52 @@ import 'package:flutter/material.dart';
 import 'dart:math' as math;
 
 /// LED網格效果繪製
-/// 建立LED點陣效果的背景
+/// 模擬老式LED顯示屏的像素化遮罩效果
 class LedGridPainter extends CustomPainter {
-  final Color color;
-
-  LedGridPainter(this.color);
-
   @override
   void paint(Canvas canvas, Size size) {
-    final dotSize = 2.0;
-    final spacing = 6.0;
-    final brightColor = HSLColor.fromColor(color).withLightness(0.7).toColor();
-    final darkColor = HSLColor.fromColor(color).withLightness(0.3).toColor();
+    final dotRadius = 3.0;    // 增大圓點半徑
+    final spacing = 7.0;      // 調整點陣間距
 
-    for (double x = 0; x < size.width; x += spacing) {
-      for (double y = 0; y < size.height; y += spacing) {
-        // 隨機選擇亮點或暗點以創建更自然的LED效果
-        final dotColor = math.Random().nextDouble() > 0.7 ? brightColor : darkColor;
+    // 使用 canvas.save() 和 canvas.clipRect() 限制繪製區域
+    canvas.save();
+    canvas.clipRect(Rect.fromLTWH(0, 0, size.width, size.height));
 
+    // 遍歷畫布，確保覆蓋整個高度和寬度
+    for (double x = 1; x <= size.width; x += spacing) {
+      for (double y = 0; y <= size.height; y += spacing) {
+        // 創建一個Path，表示圓點區域
+        final dotPath = Path()
+          ..addOval(Rect.fromCircle(center: Offset(x, y), radius: dotRadius));
+
+        // 創建一個Path，表示整個網格區域
+        final gridPath = Path()
+          ..addRect(Rect.fromLTWH(
+              x - spacing/2,
+              y - spacing/2,
+              spacing,
+              spacing
+          ));
+
+        // 從網格Path中移除圓點Path
+        final remainingPath = Path.combine(
+            PathOperation.difference,
+            gridPath,
+            dotPath
+        );
+
+        // 繪製剩餘區域（黑色）
         final paint = Paint()
-          ..color = dotColor
+          ..color = Colors.black
           ..style = PaintingStyle.fill;
 
-        canvas.drawCircle(Offset(x, y), dotSize, paint);
+        canvas.drawPath(remainingPath, paint);
       }
     }
+
+    canvas.restore();
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) {
-    return oldDelegate is LedGridPainter && oldDelegate.color != color;
-  }
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

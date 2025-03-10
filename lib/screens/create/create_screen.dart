@@ -139,27 +139,32 @@ class _CreateScreenState extends ConsumerState<CreateScreen> with SingleTickerPr
                 ),
                 child: Stack(
                   children: [
-                    // LED效果網格(當LED背景開啟時顯示)
-                    if (_ledBackgroundOn)
-                      Opacity(
-                        opacity: 0.4,
-                        child: CustomPaint(
-                          painter: LedGridPainter(Color(int.parse(_backgroundColor.replaceAll('#', '0xFF')))),
-                          size: Size.infinite,
+                    // 原有的背景和文字
+                    Container(
+                      color: Color(int.parse(_backgroundColor.replaceAll('#', '0xFF'))),
+                      child: Center(
+                        child: Text(
+                          _textController.text.isEmpty ? 'Happy New Year !!!!' : _textController.text,
+                          style: TextStyle(
+                            fontSize: _fontSize.toDouble(),
+                            fontFamily: _fontFamily,
+                            color: Color(int.parse(_textColor.replaceAll('#', '0xFF'))),
+                          ),
+                          textAlign: TextAlign.center,
                         ),
-                      ),
-                    // 文字內容
-                    Center(
-                      child: Text(
-                        _textController.text.isEmpty ? 'Happy New Year !!!!' : _textController.text,
-                        style: TextStyle(
-                          fontSize: _fontSize.toDouble(),
-                          fontFamily: _fontFamily,
-                          color: Color(int.parse(_textColor.replaceAll('#', '0xFF'))),
-                        ),
-                        textAlign: TextAlign.center,
                       ),
                     ),
+
+                    // LED遮罩
+                    if (_ledBackgroundOn)
+                      Positioned.fill(
+                        child: IgnorePointer(
+                          child: CustomPaint(
+                            painter: LedGridPainter(),
+                            child: const SizedBox.expand(),
+                          ),
+                        ),
+                      ),
                   ],
                 ),
               ),
