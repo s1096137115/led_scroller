@@ -173,9 +173,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               : ScrollerCard(
                             scroller: scroller,
                             onEdit: () {
-                              // Set current scroller for editing
+                              // 修改流程：點擊scroller時直接進入Preview頁面，而不是Edit頁面
                               ref.read(currentScrollerProvider.notifier).state = scroller;
-                              context.push('/create');
+                              context.push('/preview');
                             },
                           ),
                         );

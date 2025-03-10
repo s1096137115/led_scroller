@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'dart:ui'; // 用於模糊效果
 import '../../providers/scroller_providers.dart';
 import '../../models/scroller.dart';
+import '../create/widgets/led_grid_painter.dart'; // 引入LED點陣效果
 
 /// 預覽頁面
 /// 提供全螢幕預覽當前編輯的Scroller
 /// 展示實際的LED效果和動畫
+/// 根據Figma設計實現模糊效果和滑動控制
 class PreviewScreen extends ConsumerStatefulWidget {
   const PreviewScreen({Key? key}) : super(key: key);
 
@@ -16,8 +19,22 @@ class PreviewScreen extends ConsumerStatefulWidget {
 
 class _PreviewScreenState extends ConsumerState<PreviewScreen> with SingleTickerProviderStateMixin {
   bool _isVertical = true;
+  bool _showLedEffect = false;
   late AnimationController _controller;
   late Animation<Offset> _offsetAnimation;
+
+  // 控制UI顯示的狀態
+  bool _showControls = true;
+  final ScrollController _scrollController = ScrollController();
+  bool _shouldBlurHeader = false;
+  bool _shouldBlurFooter = false;
+
+  // 監聽LED效果狀態變化
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _showLedEffect = ref.watch(ledEffectEnabledProvider);
+  }
 
   @override
   void initState() {
@@ -27,32 +44,65 @@ class _PreviewScreenState extends ConsumerState<PreviewScreen> with SingleTicker
       vsync: this,
     )..repeat(reverse: false);
 
-    // Initialize with appropriate animation based on direction
+    // 初始化適當的動畫方向
     _updateAnimation();
+
+    // 添加滾動監聽器來判斷是否需要模糊效果
+    _scrollController.addListener(_updateBlurStatus);
+
+    // 從Provider獲取LED效果狀態
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      setState(() {
+        _showLedEffect = ref.read(ledEffectEnabledProvider);
+      });
+    });
   }
 
   @override
   void dispose() {
     _controller.dispose();
+    _scrollController.removeListener(_updateBlurStatus);
+    _scrollController.dispose();
     super.dispose();
+  }
+
+  // 根據滾動位置更新模糊狀態
+  void _updateBlurStatus() {
+    final scroller = ref.read(currentScrollerProvider);
+    if (scroller == null) return;
+
+    if (_scrollController.hasClients) {
+      final textLength = scroller.text.length;
+      final threshold = 50; // 假設超過50個字符時需要模糊效果
+
+      setState(() {
+        if (textLength > threshold) {
+          _shouldBlurHeader = _scrollController.offset > 10;
+          _shouldBlurFooter = _scrollController.position.maxScrollExtent - _scrollController.offset > 10;
+        } else {
+          _shouldBlurHeader = false;
+          _shouldBlurFooter = false;
+        }
+      });
+    }
   }
 
   void _updateAnimation() {
     final scroller = ref.read(currentScrollerProvider);
     if (scroller == null) return;
 
-    // Adjust the speed (1 is slowest, 10 is fastest)
-    final speedFactor = scroller.speed / 5; // Normalize speed
+    // 調整速度 (1是最慢, 10是最快)
+    final speedFactor = scroller.speed / 5; // 標準化速度
 
-    // Calculate the animation duration based on speed
+    // 根據速度計算動畫持續時間
     final duration = Duration(seconds: (15 / speedFactor).round());
     _controller.duration = duration;
 
-    // Reset controller to apply new duration
+    // 重置控制器以應用新的持續時間
     _controller.reset();
     _controller.repeat(reverse: false);
 
-    // Set animation based on direction and orientation
+    // 根據方向和排列設置動畫
     switch (scroller.direction) {
       case ScrollDirection.left:
         _offsetAnimation = Tween<Offset>(
@@ -93,6 +143,20 @@ class _PreviewScreenState extends ConsumerState<PreviewScreen> with SingleTicker
     }
   }
 
+  // 切換控制界面顯示
+  void _toggleControls() {
+    setState(() {
+      _showControls = !_showControls;
+    });
+  }
+
+  // 從Provider更新LED效果狀態
+  void _updateLedEffectState() {
+    setState(() {
+      _showLedEffect = ref.read(ledEffectEnabledProvider);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final scroller = ref.watch(currentScrollerProvider);
@@ -110,82 +174,71 @@ class _PreviewScreenState extends ConsumerState<PreviewScreen> with SingleTicker
 
     return Scaffold(
       backgroundColor: Colors.black,
-      appBar: AppBar(
+      extendBodyBehindAppBar: true,
+      appBar: _showControls ? AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: const Text('Preview'),
-        actions: [
-          // Toggle between vertical and horizontal view
-          IconButton(
-            icon: Icon(_isVertical ? Icons.swap_horiz : Icons.swap_vert),
-            onPressed: () {
-              setState(() {
-                _isVertical = !_isVertical;
-                // Update animation when orientation changes
-                _updateAnimation();
-              });
-            },
+        title: const Text('View Full Screen'),
+        centerTitle: true,
+        automaticallyImplyLeading: false,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => context.pop(),
+        ),
+        flexibleSpace: _shouldBlurHeader ? ClipRect(
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+            child: Container(color: Colors.black.withOpacity(0.3)),
           ),
-          // Edit button
-          IconButton(
-            icon: const Icon(Icons.edit),
-            onPressed: () {
-              context.pop();
-            },
-          ),
-        ],
-      ),
-      body: Center(
-        child: GestureDetector(
-          onTap: () {
-            // Toggle play/pause
-            if (_controller.isAnimating) {
-              _controller.stop();
-            } else {
-              _controller.repeat();
-            }
-          },
-          child: Container(
-            width: _isVertical ? 300 : double.infinity,
-            height: _isVertical ? double.infinity : 300,
-            color: backgroundColor,
-            child: SlideTransition(
-              position: _offsetAnimation,
-              child: Center(
-                child: _isVertical
-                    ? _buildVerticalText(scroller.text, textColor, scroller.fontSize.toDouble(), scroller.fontFamily)
-                    : _buildHorizontalText(scroller.text, textColor, scroller.fontSize.toDouble(), scroller.fontFamily),
-              ),
+        ) : Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [Colors.black.withOpacity(0.7), Colors.transparent],
             ),
           ),
         ),
-      ),
-      // Optional LED effect overlay
-      bottomNavigationBar: BottomAppBar(
-        color: Colors.transparent,
-        elevation: 0,
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 8.0),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              ElevatedButton(
-                onPressed: () {
-                  context.pop();
-                },
-                child: const Text('Back'),
+      ) : null,
+      body: GestureDetector(
+        onTap: _toggleControls,
+        child: Stack(
+          children: [
+            // 主內容區域
+            Container(
+              width: double.infinity,
+              height: double.infinity,
+              color: backgroundColor,
+              child: SlideTransition(
+                position: _offsetAnimation,
+                child: Center(
+                  child: _isVertical
+                      ? _buildVerticalText(scroller.text, textColor, scroller.fontSize.toDouble(), scroller.fontFamily)
+                      : _buildHorizontalText(scroller.text, textColor, scroller.fontSize.toDouble(), scroller.fontFamily),
+                ),
               ),
-              ElevatedButton(
-                onPressed: () {
-                  // Toggle LED dot matrix effect
-                  setState(() {
-                    // In a real app, you'd implement a dot matrix effect here
-                  });
-                },
-                child: const Text('LED Effect'),
+            ),
+
+            // LED點陣效果
+            if (_showLedEffect)
+              Positioned.fill(
+                child: IgnorePointer(
+                  child: CustomPaint(
+                    painter: LedGridPainter(),
+                    child: const SizedBox.expand(),
+                  ),
+                ),
               ),
-            ],
-          ),
+
+            // 底部控制欄
+            if (_showControls)
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: _buildBottomControls(context),
+              ),
+          ],
         ),
       ),
     );
@@ -193,7 +246,7 @@ class _PreviewScreenState extends ConsumerState<PreviewScreen> with SingleTicker
 
   Widget _buildVerticalText(String text, Color color, double fontSize, String fontFamily) {
     return RotatedBox(
-      quarterTurns: 3, // Rotate to make text vertical
+      quarterTurns: 3, // 旋轉使文字垂直
       child: Text(
         text,
         style: TextStyle(
@@ -201,6 +254,8 @@ class _PreviewScreenState extends ConsumerState<PreviewScreen> with SingleTicker
           fontSize: fontSize,
           fontFamily: fontFamily,
           letterSpacing: 1.2,
+          height: 1.2, // 改善行高
+          fontWeight: FontWeight.w500, // 稍微加粗以提高清晰度
         ),
         textAlign: TextAlign.center,
       ),
@@ -217,6 +272,65 @@ class _PreviewScreenState extends ConsumerState<PreviewScreen> with SingleTicker
         letterSpacing: 1.2,
       ),
       textAlign: TextAlign.center,
+    );
+  }
+
+  // 底部控制按鈕
+  Widget _buildBottomControls(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).padding.bottom + 8,
+        left: 16,
+        right: 16,
+        top: 8,
+      ),
+      decoration: BoxDecoration(
+        color: _shouldBlurFooter
+            ? Colors.transparent
+            : Colors.black.withOpacity(0.4),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      child: ClipRect(
+        child: BackdropFilter(
+          filter: ImageFilter.blur(
+              sigmaX: _shouldBlurFooter ? 5 : 0,
+              sigmaY: _shouldBlurFooter ? 5 : 0
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              ElevatedButton(
+                onPressed: () => context.pop(),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.grey.shade800.withOpacity(0.7),
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(30),
+                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                ),
+                child: const Text('Back'),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  // 導航到編輯頁面，保持當前scroller的狀態
+                  // 注意：此時不需要pop，而是直接push到編輯頁面
+                  context.push('/create');
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.grey.shade800.withOpacity(0.7),
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(30),
+                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                ),
+                child: const Text('Edit'),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

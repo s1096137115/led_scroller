@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../models/scroller.dart';
 import '../../providers/scroller_providers.dart';
-import 'widgets/color_picker.dart';
 import 'widgets/led_grid_painter.dart';
 import 'widgets/tab_widgets.dart';
 
@@ -52,6 +51,9 @@ class _CreateScreenState extends ConsumerState<CreateScreen> with SingleTickerPr
       // 如果是新建，設置初始文字
       _textController.text = "Happy New Year !!!!";
     }
+
+    // 獲取LED效果狀態
+    _ledBackgroundOn = ref.read(ledEffectEnabledProvider);
   }
 
   @override
@@ -221,9 +223,11 @@ class _CreateScreenState extends ConsumerState<CreateScreen> with SingleTickerPr
                               fontSize: _fontSize,
                               fontFamily: _fontFamily,
                               textColor: _textColor,
+                              backgroundColor: _backgroundColor, // 新增背景顏色
                               onFontSizeChanged: (size) => setState(() => _fontSize = size),
                               onFontFamilyChanged: (family) => setState(() => _fontFamily = family),
                               onTextColorChanged: (color) => setState(() => _textColor = color),
+                              onBackgroundColorChanged: (color) => setState(() => _backgroundColor = color), // 新增背景顏色更改處理
                             ),
                             EffectTab(
                               direction: _direction,
@@ -231,7 +235,11 @@ class _CreateScreenState extends ConsumerState<CreateScreen> with SingleTickerPr
                               ledBackgroundOn: _ledBackgroundOn,
                               onDirectionChanged: (dir) => setState(() => _direction = dir),
                               onSpeedChanged: (spd) => setState(() => _speed = spd),
-                              onLedBackgroundChanged: (isOn) => setState(() => _ledBackgroundOn = isOn),
+                              onLedBackgroundChanged: (isOn) {
+                                setState(() => _ledBackgroundOn = isOn);
+                                // 更新全局LED效果狀態
+                                ref.read(ledEffectEnabledProvider.notifier).state = isOn;
+                              },
                             ),
                           ],
                         ),
@@ -259,6 +267,8 @@ class _CreateScreenState extends ConsumerState<CreateScreen> with SingleTickerPr
                           speed: _speed,
                         );
                         ref.read(currentScrollerProvider.notifier).state = previewScroller;
+                        // 確保預覽頁面使用當前的LED效果設置
+                        ref.read(ledEffectEnabledProvider.notifier).state = _ledBackgroundOn;
                         context.push('/preview');
                       },
                       style: ElevatedButton.styleFrom(

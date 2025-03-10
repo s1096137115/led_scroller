@@ -1,24 +1,28 @@
 import 'package:flutter/material.dart';
 import '../../../models/scroller.dart';
-import 'color_picker.dart';
+import 'wheel_color_picker.dart';
 
 /// Style 標籤內容組件
 class StyleTab extends StatelessWidget {
   final int fontSize;
   final String fontFamily;
   final String textColor;
+  final String backgroundColor;
   final Function(int) onFontSizeChanged;
   final Function(String) onFontFamilyChanged;
   final Function(String) onTextColorChanged;
+  final Function(String) onBackgroundColorChanged;
 
   const StyleTab({
     Key? key,
     required this.fontSize,
     required this.fontFamily,
     required this.textColor,
+    required this.backgroundColor,
     required this.onFontSizeChanged,
     required this.onFontFamilyChanged,
     required this.onTextColorChanged,
+    required this.onBackgroundColorChanged,
   }) : super(key: key);
 
   @override
@@ -86,9 +90,18 @@ class StyleTab extends StatelessWidget {
           // 文字顏色
           const Text('Text Color', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
           const SizedBox(height: 8),
-          ColorPicker(
+          LedColorPicker(
             currentColor: textColor,
             onColorSelected: onTextColorChanged,
+          ),
+          const SizedBox(height: 24),
+
+          // 背景顏色 (新增)
+          const Text('Background Color', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+          const SizedBox(height: 8),
+          LedColorPicker(
+            currentColor: backgroundColor,
+            onColorSelected: onBackgroundColorChanged,
           ),
         ],
       ),

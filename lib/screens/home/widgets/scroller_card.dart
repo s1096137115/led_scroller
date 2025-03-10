@@ -6,7 +6,7 @@ import '../../../providers/scroller_providers.dart';
 
 /// Scroller卡片組件
 /// 在首頁列表中顯示單個Scroller的預覽
-/// 支援左滑刪除功能和點擊編輯
+/// 支援左滑刪除功能和點擊預覽
 class ScrollerCard extends ConsumerWidget {
   final Scroller scroller;
   final VoidCallback? onEdit;
@@ -48,7 +48,7 @@ class ScrollerCard extends ConsumerWidget {
         );
       },
       child: GestureDetector(
-        onTap: onEdit,
+        onTap: onEdit, // 這裡已經修改為導航到預覽頁面的回調函數
         child: Container(
           width: double.infinity,
           padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 16.0),
