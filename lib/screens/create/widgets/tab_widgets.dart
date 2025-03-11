@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../../models/scroller.dart';
 import 'wheel_color_picker.dart';
 
@@ -27,121 +28,164 @@ class StyleTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
+    return Padding(
       padding: const EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // 字體大小
-          const Text('Size', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
-          const SizedBox(height: 8),
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
+      child: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // 字體大小選擇
+            const Text('Size', style: TextStyle(fontWeight: FontWeight.bold)),
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 16, // 統一間距為16
+              runSpacing: 16, // 統一行間距為16
               children: [20, 40, 60, 80, 100].map((size) {
-                final isSelected = fontSize == size;
-                return Padding(
-                  padding: const EdgeInsets.only(right: 8.0),
-                  child: GestureDetector(
-                    onTap: () => onFontSizeChanged(size),
-                    child: Container(
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(
-                        color: isSelected ? Colors.purple : Colors.transparent,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: isSelected ? Colors.purple : Colors.grey.withOpacity(0.5),
-                        ),
-                      ),
-                      child: Center(
-                        child: Text(
-                          '$size',
-                          style: TextStyle(
-                            color: isSelected ? Colors.white : Colors.grey,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                );
+                return _buildSizeBox(context, size);
               }).toList(),
             ),
-          ),
-          const SizedBox(height: 24),
+            const SizedBox(height: 24),
 
-          // 字體選擇
-          const Text('Fonts', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
-          const SizedBox(height: 8),
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
+            // 字體選擇
+            const Text('Fonts', style: TextStyle(fontWeight: FontWeight.bold)),
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 16, // 統一間距為16
+              runSpacing: 16, // 統一行間距為16
               children: [
-                _buildFontOption('Roboto', 'Aa'),
-                _buildFontOption('Arial', 'Aa'),
-                _buildFontOption('Times New Roman', 'Aa'),
-                _buildFontOption('Courier New', 'Aa'),
-                _buildFontOption('Georgia', 'Aa'),
+                _buildFontBox(context, 'Abhaya Libre', 'Aa'),
+                _buildFontBox(context, 'ABeeZee', 'Aa'),
+                _buildFontBox(context, 'Aclonica', 'Aa'),
+                _buildFontBox(context, 'Oswald', 'Aa'),
+                _buildFontBox(context, 'Pacifico', 'Aa'), // 替換 Agbalumo
+                _buildFontBox(context, 'Alfa Slab One', 'Aa'),
+                _buildFontBox(context, 'Roboto', 'Aa'),
+                _buildFontBox(context, 'Lato', 'Aa'),
+                _buildFontBox(context, 'Bangers', 'Aa'),
+                _buildFontBox(context, 'Bungee Inline', 'Aa'),
               ],
             ),
-          ),
-          const SizedBox(height: 24),
+            const SizedBox(height: 24),
 
-          // 文字顏色
-          const Text('Text Color', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
-          const SizedBox(height: 8),
-          LedColorPicker(
-            currentColor: textColor,
-            onColorSelected: onTextColorChanged,
-          ),
-          const SizedBox(height: 24),
+            // 文字顏色
+            const Text('Text Color', style: TextStyle(fontWeight: FontWeight.bold)),
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 16,
+              runSpacing: 16,
+              children: [
+                LedColorPicker(
+                  currentColor: textColor,
+                  onColorSelected: onTextColorChanged,
+                  isTextColor: true,
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
 
-          // 背景顏色 (新增)
-          const Text('Background Color', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
-          const SizedBox(height: 8),
-          LedColorPicker(
-            currentColor: backgroundColor,
-            onColorSelected: onBackgroundColorChanged,
-          ),
-        ],
+            // 背景顏色
+            const Text('Background Color', style: TextStyle(fontWeight: FontWeight.bold)),
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 16,
+              runSpacing: 16,
+              children: [
+                LedColorPicker(
+                  currentColor: backgroundColor,
+                  onColorSelected: onBackgroundColorChanged,
+                  isTextColor: false,
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildFontOption(String fontName, String sample) {
-    final isSelected = fontFamily == fontName;
-
-    return Padding(
-      padding: const EdgeInsets.only(right: 8.0),
-      child: GestureDetector(
-        onTap: () => onFontFamilyChanged(fontName),
-        child: Container(
-          width: 48,
-          height: 48,
-          decoration: BoxDecoration(
-            border: Border.all(
-              color: isSelected ? Colors.purple : Colors.grey.withOpacity(0.5),
-              width: isSelected ? 2 : 1,
-            ),
-            borderRadius: BorderRadius.circular(12),
+  Widget _buildSizeBox(BuildContext context, int size) {
+    final bool isSelected = fontSize == size;
+    return GestureDetector(
+      onTap: () => onFontSizeChanged(size),
+      child: Container(
+        width: 50,
+        height: 50,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12),
+          color: isSelected ? Theme.of(context).colorScheme.primary : null,
+          border: Border.all(
+            color: isSelected
+                ? Theme.of(context).colorScheme.primary
+                : Colors.grey.shade600,
+            width: isSelected ? 2 : 1,
           ),
-          child: Center(
-            child: Text(
-              sample,
-              style: TextStyle(
-                fontFamily: fontName,
-                color: isSelected ? Colors.purple : Colors.grey,
-                fontSize: 16,
-              ),
+        ),
+        child: Center(
+          child: Text(
+            '$size',
+            style: TextStyle(
+              fontSize: 18,
+              color: isSelected ? Colors.white : Colors.grey.shade400,
             ),
           ),
         ),
       ),
     );
   }
+
+  Widget _buildFontBox(BuildContext context, String fontFamily, String sample) {
+    final bool isSelected = this.fontFamily == fontFamily;
+    return GestureDetector(
+      onTap: () => onFontFamilyChanged(fontFamily),
+      child: Container(
+        width: 50, // 50x50的框
+        height: 50,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12),
+          color: isSelected ? Theme.of(context).colorScheme.primary : null,
+          border: Border.all(
+            color: isSelected
+                ? Theme.of(context).colorScheme.primary
+                : Colors.grey.shade600,
+            width: isSelected ? 2 : 1,
+          ),
+        ),
+        child: Center(
+          child: Text(
+            sample, // 'Aa'
+            style:
+            GoogleFonts.getFont(
+              _getFontName(fontFamily),
+              fontSize: 16,
+              color: isSelected ? Colors.white : Colors.grey.shade400,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // 輔助方法：將字體名轉換為Google Fonts格式
+  String _getFontName(String fontFamily) {
+    // 處理特殊情況
+    switch (fontFamily) {
+      case 'Abhaya Libre': return 'abhayaLibre';
+      case 'ABeeZee': return 'aBeeZee';
+      case 'Aclonica': return 'aclonica';
+      case 'Oswald': return 'oswald';
+      case 'Pacifico': return 'pacifico';
+      case 'Alfa Slab One': return 'alfaSlabOne';
+      case 'Roboto': return 'roboto';
+      case 'Lato': return 'lato';
+      case 'Bangers': return 'bangers';
+      case 'Bungee Inline': return 'bungeeInline';
+      default: return 'roboto'; // 備用字體
+    }
+  }
 }
 
-/// Effect 標籤內容組件
+/// Effect標籤內容
+/// 處理滾動方向、速度和特效設定
 class EffectTab extends StatelessWidget {
   final ScrollDirection direction;
   final int speed;
@@ -162,135 +206,84 @@ class EffectTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
+    return Padding(
       padding: const EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // 方向按鈕
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              _buildDirectionButton(ScrollDirection.right, Icons.arrow_forward),
-              _buildDirectionButton(ScrollDirection.left, Icons.arrow_back),
-              _buildDirectionButton(ScrollDirection.up, Icons.arrow_upward),
-              _buildDirectionButton(ScrollDirection.down, Icons.arrow_downward),
-            ],
-          ),
-          const SizedBox(height: 32),
+      child: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // 滾動方向
+            const Text('Direction', style: TextStyle(fontWeight: FontWeight.bold)),
+            const SizedBox(height: 12),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                _buildDirectionButton(context, ScrollDirection.left, Icons.arrow_back),
+                _buildDirectionButton(context, ScrollDirection.right, Icons.arrow_forward),
+                _buildDirectionButton(context, ScrollDirection.up, Icons.arrow_upward),
+                _buildDirectionButton(context, ScrollDirection.down, Icons.arrow_downward),
+              ],
+            ),
+            const SizedBox(height: 24),
 
-          // 速度按鈕
-          const Text('Speed Scroll', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
-          const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              _buildSpeedButton(0, "0"),
-              _buildSpeedButton(3, "0.5x"),
-              _buildSpeedButton(5, "1x"),
-              _buildSpeedButton(8, "5x"),
-              _buildSpeedButton(10, "10x"),
-            ],
-          ),
-          const SizedBox(height: 32),
+            // 滾動速度
+            const Text('Speed', style: TextStyle(fontWeight: FontWeight.bold)),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                const Text('Slow'),
+                Expanded(
+                  child: Slider(
+                    value: speed.toDouble(),
+                    min: 1,
+                    max: 10,
+                    divisions: 9,
+                    label: speed.toString(),
+                    onChanged: (value) => onSpeedChanged(value.toInt()),
+                  ),
+                ),
+                const Text('Fast'),
+              ],
+            ),
+            const SizedBox(height: 24),
 
-          // LED背景選項
-          const Text('Led background', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              _buildLedBackgroundButton(false, "Off"),
-              const SizedBox(width: 16),
-              _buildLedBackgroundButton(true, "On"),
-            ],
-          ),
-        ],
+            // LED背景效果
+            const Text('LED Effect', style: TextStyle(fontWeight: FontWeight.bold)),
+            const SizedBox(height: 12),
+            SwitchListTile(
+              title: const Text('LED Background'),
+              value: ledBackgroundOn,
+              onChanged: onLedBackgroundChanged,
+              activeColor: Theme.of(context).colorScheme.primary,
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildDirectionButton(ScrollDirection dir, IconData icon) {
-    final isSelected = direction == dir;
-
+  Widget _buildDirectionButton(BuildContext context, ScrollDirection dir, IconData icon) {
+    final bool isSelected = direction == dir;
     return GestureDetector(
       onTap: () => onDirectionChanged(dir),
       child: Container(
-        width: 60,
-        height: 60,
+        width: 70,
+        height: 70,
         decoration: BoxDecoration(
-          color: Colors.transparent,
-          border: Border.all(color: Colors.white.withOpacity(0.3), width: 1),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Material(
-          color: isSelected ? Colors.purple.withOpacity(0.3) : Colors.transparent,
-          borderRadius: BorderRadius.circular(12),
-          child: Center(
-            child: Icon(
-              icon,
-              color: isSelected ? Colors.white : Colors.white.withOpacity(0.7),
-              size: 24,
-            ),
+          borderRadius: BorderRadius.circular(10),
+          color: isSelected ? Theme.of(context).colorScheme.primary : null,
+          border: Border.all(
+            color: isSelected
+                ? Theme.of(context).colorScheme.primary
+                : Colors.grey.shade600,
+            width: 1,
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildSpeedButton(int spd, String label) {
-    final isSelected = speed == spd;
-
-    return GestureDetector(
-      onTap: () => onSpeedChanged(spd),
-      child: Container(
-        width: 60,
-        height: 60,
-        decoration: BoxDecoration(
-          color: Colors.transparent,
-          border: Border.all(color: Colors.white.withOpacity(0.3), width: 1),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Material(
-          color: isSelected ? Colors.purple.withOpacity(0.3) : Colors.transparent,
-          borderRadius: BorderRadius.circular(12),
-          child: Center(
-            child: Text(
-              label,
-              style: TextStyle(
-                color: isSelected ? Colors.white : Colors.white.withOpacity(0.7),
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildLedBackgroundButton(bool isOn, String label) {
-    final isSelected = isOn == ledBackgroundOn;
-
-    return GestureDetector(
-      onTap: () => onLedBackgroundChanged(isOn),
-      child: Container(
-        width: 60,
-        height: 60,
-        decoration: BoxDecoration(
-          color: Colors.transparent,
-          border: Border.all(color: Colors.white.withOpacity(0.3), width: 1),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Material(
-          color: isSelected ? Colors.purple.withOpacity(0.3) : Colors.transparent,
-          borderRadius: BorderRadius.circular(12),
-          child: Center(
-            child: Text(
-              label,
-              style: TextStyle(
-                color: isSelected ? Colors.white : Colors.white.withOpacity(0.7),
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-              ),
-            ),
+        child: Center(
+          child: Icon(
+            icon,
+            color: isSelected ? Colors.white : Colors.grey.shade400,
+            size: 30,
           ),
         ),
       ),

@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+
 import '../../models/scroller.dart';
 import '../../providers/scroller_providers.dart';
 import 'widgets/led_grid_painter.dart';
 import 'widgets/tab_widgets.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 /// 建立/編輯Scroller頁面
 /// 提供完整的Scroller設定界面，包含樣式和效果設定
@@ -17,7 +19,8 @@ class CreateScreen extends ConsumerStatefulWidget {
   ConsumerState<CreateScreen> createState() => _CreateScreenState();
 }
 
-class _CreateScreenState extends ConsumerState<CreateScreen> with SingleTickerProviderStateMixin {
+class _CreateScreenState extends ConsumerState<CreateScreen>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
   final _textController = TextEditingController();
   int _fontSize = 40;
@@ -73,23 +76,23 @@ class _CreateScreenState extends ConsumerState<CreateScreen> with SingleTickerPr
 
     final scroller = _isEditing
         ? ref.read(currentScrollerProvider)!.copyWith(
-      text: _textController.text,
-      fontSize: _fontSize,
-      fontFamily: _fontFamily,
-      textColor: _textColor,
-      backgroundColor: _backgroundColor,
-      direction: _direction,
-      speed: _speed,
-    )
+              text: _textController.text,
+              fontSize: _fontSize,
+              fontFamily: _fontFamily,
+              textColor: _textColor,
+              backgroundColor: _backgroundColor,
+              direction: _direction,
+              speed: _speed,
+            )
         : Scroller.create(
-      text: _textController.text,
-      fontSize: _fontSize,
-      fontFamily: _fontFamily,
-      textColor: _textColor,
-      backgroundColor: _backgroundColor,
-      direction: _direction,
-      speed: _speed,
-    );
+            text: _textController.text,
+            fontSize: _fontSize,
+            fontFamily: _fontFamily,
+            textColor: _textColor,
+            backgroundColor: _backgroundColor,
+            direction: _direction,
+            speed: _speed,
+          );
 
     if (_isEditing) {
       ref.read(scrollersProvider.notifier).updateScroller(scroller);
@@ -136,24 +139,23 @@ class _CreateScreenState extends ConsumerState<CreateScreen> with SingleTickerPr
               Container(
                 height: 120,
                 decoration: BoxDecoration(
-                  color: Color(int.parse(_backgroundColor.replaceAll('#', '0xFF'))),
+                  color: Color(
+                      int.parse(_backgroundColor.replaceAll('#', '0xFF'))),
                   borderRadius: BorderRadius.circular(24),
                 ),
                 child: Stack(
                   children: [
                     // 原有的背景和文字
                     Container(
-                      color: Color(int.parse(_backgroundColor.replaceAll('#', '0xFF'))),
+                      color: Color(
+                          int.parse(_backgroundColor.replaceAll('#', '0xFF'))),
                       child: Center(
                         child: Text(
                           _textController.text.isEmpty ? 'Happy New Year !!!!' : _textController.text,
-                          style: TextStyle(
-                            fontSize: _fontSize.toDouble(),
-                            fontFamily: _fontFamily,
-                            color: Color(int.parse(_textColor.replaceAll('#', '0xFF'))),
-                          ),
+                          style: _getFontStyle(),
                           textAlign: TextAlign.center,
-                        ),
+                        )
+                        ,
                       ),
                     ),
 
@@ -184,7 +186,8 @@ class _CreateScreenState extends ConsumerState<CreateScreen> with SingleTickerPr
                   fillColor: const Color(0xFF2A2A3E),
                   hintText: 'Enter text',
                   hintStyle: const TextStyle(color: Colors.grey),
-                  contentPadding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 20.0),
+                  contentPadding: const EdgeInsets.symmetric(
+                      vertical: 16.0, horizontal: 20.0),
                 ),
                 style: const TextStyle(color: Colors.white),
                 textAlign: TextAlign.center,
@@ -198,7 +201,8 @@ class _CreateScreenState extends ConsumerState<CreateScreen> with SingleTickerPr
                   decoration: BoxDecoration(
                     color: const Color(0xFF24243D),
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: Colors.purple.withOpacity(0.3), width: 1),
+                    border: Border.all(
+                        color: Colors.purple.withOpacity(0.3), width: 1),
                   ),
                   child: Column(
                     children: [
@@ -212,9 +216,11 @@ class _CreateScreenState extends ConsumerState<CreateScreen> with SingleTickerPr
                         indicatorSize: TabBarIndicatorSize.tab,
                         labelColor: Colors.purple.shade400,
                         unselectedLabelColor: Colors.grey,
-                        labelStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                        labelStyle: const TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.bold),
                       ),
-                      const Divider(height: 1, thickness: 1, color: Color(0xFF333355)),
+                      const Divider(
+                          height: 1, thickness: 1, color: Color(0xFF333355)),
                       Expanded(
                         child: TabBarView(
                           controller: _tabController,
@@ -223,22 +229,31 @@ class _CreateScreenState extends ConsumerState<CreateScreen> with SingleTickerPr
                               fontSize: _fontSize,
                               fontFamily: _fontFamily,
                               textColor: _textColor,
-                              backgroundColor: _backgroundColor, // 新增背景顏色
-                              onFontSizeChanged: (size) => setState(() => _fontSize = size),
-                              onFontFamilyChanged: (family) => setState(() => _fontFamily = family),
-                              onTextColorChanged: (color) => setState(() => _textColor = color),
-                              onBackgroundColorChanged: (color) => setState(() => _backgroundColor = color), // 新增背景顏色更改處理
+                              backgroundColor: _backgroundColor,
+                              // 新增背景顏色
+                              onFontSizeChanged: (size) =>
+                                  setState(() => _fontSize = size),
+                              onFontFamilyChanged: (family) =>
+                                  setState(() => _fontFamily = family),
+                              onTextColorChanged: (color) =>
+                                  setState(() => _textColor = color),
+                              onBackgroundColorChanged: (color) => setState(
+                                  () => _backgroundColor = color), // 新增背景顏色更改處理
                             ),
                             EffectTab(
                               direction: _direction,
                               speed: _speed,
                               ledBackgroundOn: _ledBackgroundOn,
-                              onDirectionChanged: (dir) => setState(() => _direction = dir),
-                              onSpeedChanged: (spd) => setState(() => _speed = spd),
+                              onDirectionChanged: (dir) =>
+                                  setState(() => _direction = dir),
+                              onSpeedChanged: (spd) =>
+                                  setState(() => _speed = spd),
                               onLedBackgroundChanged: (isOn) {
                                 setState(() => _ledBackgroundOn = isOn);
                                 // 更新全局LED效果狀態
-                                ref.read(ledEffectEnabledProvider.notifier).state = isOn;
+                                ref
+                                    .read(ledEffectEnabledProvider.notifier)
+                                    .state = isOn;
                               },
                             ),
                           ],
@@ -258,7 +273,9 @@ class _CreateScreenState extends ConsumerState<CreateScreen> with SingleTickerPr
                     child: ElevatedButton(
                       onPressed: () {
                         final previewScroller = Scroller.create(
-                          text: _textController.text.isEmpty ? 'Preview Text' : _textController.text,
+                          text: _textController.text.isEmpty
+                              ? 'Preview Text'
+                              : _textController.text,
                           fontSize: _fontSize,
                           fontFamily: _fontFamily,
                           textColor: _textColor,
@@ -266,9 +283,11 @@ class _CreateScreenState extends ConsumerState<CreateScreen> with SingleTickerPr
                           direction: _direction,
                           speed: _speed,
                         );
-                        ref.read(currentScrollerProvider.notifier).state = previewScroller;
+                        ref.read(currentScrollerProvider.notifier).state =
+                            previewScroller;
                         // 確保預覽頁面使用當前的LED效果設置
-                        ref.read(ledEffectEnabledProvider.notifier).state = _ledBackgroundOn;
+                        ref.read(ledEffectEnabledProvider.notifier).state =
+                            _ledBackgroundOn;
                         context.push('/preview');
                       },
                       style: ElevatedButton.styleFrom(
@@ -312,5 +331,27 @@ class _CreateScreenState extends ConsumerState<CreateScreen> with SingleTickerPr
         ),
       ),
     );
+  }
+
+  TextStyle _getFontStyle() {
+    final baseStyle = TextStyle(
+      fontSize: _fontSize.toDouble(),
+      color: Color(int.parse(_textColor.replaceAll('#', '0xFF'))),
+    );
+
+    // 根據選中的字體返回相應的GoogleFonts樣式
+    switch (_fontFamily) {
+      case 'Abhaya Libre': return GoogleFonts.abhayaLibre();
+      case 'ABeeZee': return GoogleFonts.aBeeZee(textStyle: baseStyle);
+      case 'Aclonica': return GoogleFonts.aclonica(textStyle: baseStyle);
+      case 'Oswald': return GoogleFonts.oswald(textStyle: baseStyle);
+      case 'Pacifico': return GoogleFonts.pacifico(textStyle: baseStyle);
+      case 'Alfa Slab One': return GoogleFonts.alfaSlabOne(textStyle: baseStyle);
+      case 'Roboto': return GoogleFonts.roboto(textStyle: baseStyle);
+      case 'Lato': return GoogleFonts.lato(textStyle: baseStyle);
+      case 'Bangers': return GoogleFonts.bangers(textStyle: baseStyle);
+      case 'Bungee Inline': return GoogleFonts.bungeeInline(textStyle: baseStyle);
+      default: return GoogleFonts.roboto(textStyle: baseStyle); // 備用字體
+    }
   }
 }

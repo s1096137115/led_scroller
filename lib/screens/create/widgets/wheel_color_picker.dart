@@ -67,8 +67,8 @@ class LedColorPicker extends StatelessWidget {
     }
 
     return Wrap(
-      spacing: 10,
-      runSpacing: 10,
+      spacing: 16, // 統一所有按鈕的間距為16
+      runSpacing: 16, // 統一所有按鈕的間距為16
       children: [
         // 第一個顏色按鈕
         _buildColorButton(
@@ -81,22 +81,21 @@ class LedColorPicker extends StatelessWidget {
         GestureDetector(
           onTap: () => _showColorPickerDialog(context),
           child: Container(
-            width: isCustomColor ? 40 : 36,
-            height: isCustomColor ? 40 : 36,
+            width: 50.0, // 框大小改為50x50
+            height: 50.0,
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(isCustomColor ? 12 : 8),
-              color: isCustomColor ? Colors.transparent : null,
-              border: Border.all(
-                color: isCustomColor ? Colors.grey.shade500 : Colors.transparent,
-                width: isCustomColor ? 2 : 0,
-              ),
+              borderRadius: BorderRadius.circular(12),
+              border: isCustomColor ? Border.all(
+                color: Colors.purple,
+                width: 2,
+              ) : null, // 只有選中時才顯示邊框
             ),
             child: Center(
               child: Container(
-                width: 32,
-                height: 32,
+                width: 40.0, // 固定內部圓形大小為40x40
+                height: 40.0,
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(16),
+                  shape: BoxShape.circle,
                   gradient: const SweepGradient(
                     colors: [
                       Colors.red,
@@ -156,27 +155,28 @@ class LedColorPicker extends StatelessWidget {
     required VoidCallback onTap,
   }) {
     final colorValue = _parseColor(color);
+    const double circleSize = 40.0; // 圓形顏色球大小固定為40x40
+    const double frameSize = 50.0; // 框大小改為50x50
 
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        width: isSelected ? 40 : 36,
-        height: isSelected ? 40 : 36,
+        width: frameSize,
+        height: frameSize,
         decoration: BoxDecoration(
-          color: isSelected ? Colors.transparent : null,
-          borderRadius: BorderRadius.circular(isSelected ? 12 : 8),
-          border: Border.all(
-            color: isSelected ? Colors.grey.shade500 : Colors.transparent,
-            width: isSelected ? 2 : 0,
-          ),
+          borderRadius: BorderRadius.circular(12),
+          border: isSelected ? Border.all(
+            color: Colors.purple,
+            width: 2,
+          ) : null, // 只有選中時才顯示邊框
         ),
         child: Center(
           child: Container(
-            width: 32,
-            height: 32,
+            width: circleSize,
+            height: circleSize,
             decoration: BoxDecoration(
+              shape: BoxShape.circle,
               color: colorValue,
-              borderRadius: BorderRadius.circular(16),
             ),
           ),
         ),
