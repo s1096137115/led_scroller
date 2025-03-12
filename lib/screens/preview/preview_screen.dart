@@ -133,30 +133,7 @@ class _PreviewScreenState extends ConsumerState<PreviewScreen> with SingleTicker
     // 根據方向和排列設置動畫
     switch (scroller.direction) {
       case ScrollDirection.left:
-        _offsetAnimation = Tween<Offset>(
-          begin: const Offset(1.0, 0.0),
-          end: const Offset(-1.0, 0.0),
-        ).animate(CurvedAnimation(
-          parent: _controller,
-          curve: Curves.linear,
-        ));
-        setState(() {
-          _isVertical = false; // 確保水平顯示
-        });
-        break;
-      case ScrollDirection.right:
-        _offsetAnimation = Tween<Offset>(
-          begin: const Offset(-1.0, 0.0),
-          end: const Offset(1.0, 0.0),
-        ).animate(CurvedAnimation(
-          parent: _controller,
-          curve: Curves.linear,
-        ));
-        setState(() {
-          _isVertical = false; // 確保水平顯示
-        });
-        break;
-      case ScrollDirection.up:
+      // 左方向：文字轉90度，從下到上移動
         _offsetAnimation = Tween<Offset>(
           begin: const Offset(0.0, 1.0),
           end: const Offset(0.0, -1.0),
@@ -165,10 +142,11 @@ class _PreviewScreenState extends ConsumerState<PreviewScreen> with SingleTicker
           curve: Curves.linear,
         ));
         setState(() {
-          _isVertical = true; // 確保垂直顯示
+          _isVertical = false; // 標記為橫向文字（需要旋轉）
         });
         break;
-      case ScrollDirection.down:
+      case ScrollDirection.right:
+      // 右方向：文字轉90度，從上到下移動
         _offsetAnimation = Tween<Offset>(
           begin: const Offset(0.0, -1.0),
           end: const Offset(0.0, 1.0),
@@ -177,7 +155,33 @@ class _PreviewScreenState extends ConsumerState<PreviewScreen> with SingleTicker
           curve: Curves.linear,
         ));
         setState(() {
-          _isVertical = true; // 確保垂直顯示
+          _isVertical = false; // 標記為橫向文字（需要旋轉）
+        });
+        break;
+      case ScrollDirection.up:
+      // 上方向：文字不轉，需要斷行，從下到上移動
+        _offsetAnimation = Tween<Offset>(
+          begin: const Offset(0.0, 1.0),
+          end: const Offset(0.0, -1.0),
+        ).animate(CurvedAnimation(
+          parent: _controller,
+          curve: Curves.linear,
+        ));
+        setState(() {
+          _isVertical = true; // 標記為垂直文字（不需要旋轉）
+        });
+        break;
+      case ScrollDirection.down:
+      // 下方向：文字不轉，需要斷行，從上到下移動
+        _offsetAnimation = Tween<Offset>(
+          begin: const Offset(0.0, -1.0),
+          end: const Offset(0.0, 1.0),
+        ).animate(CurvedAnimation(
+          parent: _controller,
+          curve: Curves.linear,
+        ));
+        setState(() {
+          _isVertical = true; // 標記為垂直文字（不需要旋轉）
         });
         break;
     }
@@ -307,8 +311,19 @@ class _PreviewScreenState extends ConsumerState<PreviewScreen> with SingleTicker
                 position: _offsetAnimation,
                 child: Center(
                   child: _isVertical
-                      ? _buildVerticalText(scroller.text, textColor, scroller.fontSize.toDouble(), scroller.fontFamily)
-                      : _buildHorizontalText(scroller.text, textColor, scroller.fontSize.toDouble(), scroller.fontFamily),
+                      ? _buildVerticalText(
+                    context,
+                    scroller.text,
+                    textColor,
+                    scroller.fontSize.toDouble(),
+                    scroller.fontFamily,
+                  )
+                      : _buildHorizontalText(
+                    scroller.text,
+                    textColor,
+                    scroller.fontSize.toDouble(),
+                    scroller.fontFamily,
+                  ),
                 ),
               ),
             ),
@@ -338,9 +353,86 @@ class _PreviewScreenState extends ConsumerState<PreviewScreen> with SingleTicker
     );
   }
 
-  Widget _buildVerticalText(String text, Color color, double fontSize, String fontFamily) {
+  // 顯示垂直文字（上/下方向）
+  // 根據Figma設計，垂直方向要有換行效果避免超出屏幕
+  Widget _buildVerticalText(
+      BuildContext context,
+      String text,
+      Color color,
+      double fontSize,
+      String fontFamily,
+      ) {
+    final screenWidth = MediaQuery.of(context).size.width;
+
+    // 文字樣式
+    final TextStyle textStyle = TextStyle(
+      color: color,
+      fontSize: fontSize,
+      fontFamily: fontFamily,
+      letterSpacing: 1.2,
+      height: 1.2,
+    );
+
+    // 使用TextPainter來測量文字寬度
+    final TextPainter measurePainter = TextPainter(
+      textDirection: TextDirection.ltr,
+    );
+
+    // 基於單詞的智能斷行
+    final words = text.split(' ');
+    final List<String> lines = [];
+    String currentLine = '';
+
+    for (final word in words) {
+      final testLine = currentLine.isEmpty ? word : '$currentLine $word';
+      measurePainter.text = TextSpan(text: testLine, style: textStyle);
+      measurePainter.layout();
+
+      if (measurePainter.width > screenWidth * 0.7) {
+        if (currentLine.isNotEmpty) {
+          lines.add(currentLine);
+          currentLine = word;
+        } else {
+          // 如果單詞太長，直接添加
+          lines.add(word);
+        }
+      } else {
+        currentLine = testLine;
+      }
+    }
+
+    // 添加最後一行
+    if (currentLine.isNotEmpty) {
+      lines.add(currentLine);
+    }
+
+    return Container(
+      width: screenWidth * 0.8,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          for (String line in lines)
+            Text(
+              line,
+              style: textStyle,
+              textAlign: TextAlign.center,
+            ),
+        ],
+      ),
+    );
+  }
+
+  // 顯示水平文字（左/右方向）- 旋轉90度
+  Widget _buildHorizontalText(
+      String text,
+      Color color,
+      double fontSize,
+      String fontFamily,
+      ) {
     return RotatedBox(
-      quarterTurns: 3, // 旋轉使文字垂直
+      quarterTurns: 1, // 旋轉90度（順時針）
       child: Text(
         text,
         style: TextStyle(
@@ -348,24 +440,9 @@ class _PreviewScreenState extends ConsumerState<PreviewScreen> with SingleTicker
           fontSize: fontSize,
           fontFamily: fontFamily,
           letterSpacing: 1.2,
-          height: 1.2, // 改善行高
-          fontWeight: FontWeight.w500, // 稍微加粗以提高清晰度
         ),
         textAlign: TextAlign.center,
       ),
-    );
-  }
-
-  Widget _buildHorizontalText(String text, Color color, double fontSize, String fontFamily) {
-    return Text(
-      text,
-      style: TextStyle(
-        color: color,
-        fontSize: fontSize,
-        fontFamily: fontFamily,
-        letterSpacing: 1.2,
-      ),
-      textAlign: TextAlign.center,
     );
   }
 

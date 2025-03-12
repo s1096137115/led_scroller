@@ -166,3 +166,6 @@
 - 修復資料持久化問題：確保所有 Scroller 屬性（包括 LED 背景設定）能正確保存
 - 修復 Riverpod 生命週期錯誤：避免在 widget 構建過程中直接修改 Provider 狀態
 - 改進跨頁面狀態同步：使用 Future 與 addPostFrameCallback 確保安全更新
+
+### 已完成 [2025-03-12 18:53]
+- PreviewScreen 文字的display方向修正
