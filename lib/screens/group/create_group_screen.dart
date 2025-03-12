@@ -55,7 +55,8 @@ class _CreateGroupScreenState extends ConsumerState<CreateGroupScreen> {
     ref.read(groupsProvider.notifier).addGroup(group);
     ref.read(selectedScrollersProvider.notifier).clear();
 
-    context.pop();
+    // 使用 go 替代 pop
+    context.go('/');
 
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
@@ -291,7 +292,8 @@ class _CreateGroupScreenState extends ConsumerState<CreateGroupScreen> {
                 child: OutlinedButton(
                   onPressed: () {
                     ref.read(selectedScrollersProvider.notifier).clear();
-                    context.pop();
+                    // 使用 go 替代 pop
+                    context.go('/');
                   },
                   child: const Text('Cancel'),
                 ),

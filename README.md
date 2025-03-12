@@ -148,5 +148,21 @@
 - 修復編輯-預覽流程：確保編輯頁面的修改在預覽頁面中正確顯示
 - 統一應用導航邏輯：解決頁面間跳轉問題
 
+### 已完成 [2025-03-12 16:32]
+- 預覽模式改進：添加 PreviewMode 枚舉以更好地區分不同來源的預覽
+- 導航邏輯優化：統一使用 GoRouter 的 context.go() 方法進行頁面跳轉
+- CreateScreen 功能更新：
+    - 區分創建和編輯模式的 UI 和行為
+    - 改進"View Full Screen"按鈕，使其正確設置預覽模式
+    - 根據模式顯示"Save"或"Update"按鈕
+- PreviewScreen 功能更新：
+    - 根據來源模式顯示不同的底部按鈕組合
+    - 來自創建頁面時顯示"Edit"和"Save"按鈕
+    - 來自編輯頁面時顯示"Edit"和"Update"按鈕
+    - 來自首頁時顯示"Back"和"Edit"按鈕
+- HomeScreen 更新：點擊 Scroller 卡片時設置正確的預覽模式
 
-
+### 已完成 [2025-03-12 17:38]
+- 修復資料持久化問題：確保所有 Scroller 屬性（包括 LED 背景設定）能正確保存
+- 修復 Riverpod 生命週期錯誤：避免在 widget 構建過程中直接修改 Provider 狀態
+- 改進跨頁面狀態同步：使用 Future 與 addPostFrameCallback 確保安全更新

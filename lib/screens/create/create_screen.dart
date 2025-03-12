@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../models/scroller.dart';
+import '../../providers/preview_mode_provider.dart';
 import '../../providers/scroller_providers.dart';
 import 'widgets/led_grid_painter.dart';
 import 'widgets/tab_widgets.dart';
@@ -31,8 +32,9 @@ class _CreateScreenState extends ConsumerState<CreateScreen>
   int _speed = 5;
 
   // LED背景開關狀態
-  bool _ledBackgroundOn = false;
+  bool _ledBackgroundEnabled = true;
 
+  // 判斷是否處於編輯模式
   bool get _isEditing => ref.read(currentScrollerProvider) != null;
 
   @override
@@ -50,13 +52,18 @@ class _CreateScreenState extends ConsumerState<CreateScreen>
       _backgroundColor = currentScroller.backgroundColor;
       _direction = currentScroller.direction;
       _speed = currentScroller.speed;
+      // 從 Scroller 模型中獲取 LED 背景狀態
+      _ledBackgroundEnabled = currentScroller.ledBackgroundEnabled;
     } else {
       // 如果是新建，設置初始文字
       _textController.text = "Happy New Year !!!!";
     }
 
-    // 獲取LED效果狀態
-    _ledBackgroundOn = ref.read(ledEffectEnabledProvider);
+    // 使用 addPostFrameCallback 在構建完成後更新 Provider
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      // 同步全局 LED 效果狀態 (用於界面一致性)
+      ref.read(ledEffectEnabledProvider.notifier).state = _ledBackgroundEnabled;
+    });
   }
 
   @override
@@ -74,6 +81,17 @@ class _CreateScreenState extends ConsumerState<CreateScreen>
       return;
     }
 
+    // 輸出當前狀態信息
+    print('Current state in CreateScreen:');
+    print('- Text: ${_textController.text}');
+    print('- Font size: $_fontSize');
+    print('- Font family: $_fontFamily');
+    print('- Text color: $_textColor');
+    print('- Background color: $_backgroundColor');
+    print('- Direction: $_direction');
+    print('- Speed: $_speed');
+    print('- LED Background Enabled: $_ledBackgroundEnabled');
+
     final scroller = _isEditing
         ? ref.read(currentScrollerProvider)!.copyWith(
       text: _textController.text,
@@ -83,6 +101,7 @@ class _CreateScreenState extends ConsumerState<CreateScreen>
       backgroundColor: _backgroundColor,
       direction: _direction,
       speed: _speed,
+      ledBackgroundEnabled: _ledBackgroundEnabled, // 保存 LED 背景狀態
     )
         : Scroller.create(
       text: _textController.text,
@@ -92,15 +111,30 @@ class _CreateScreenState extends ConsumerState<CreateScreen>
       backgroundColor: _backgroundColor,
       direction: _direction,
       speed: _speed,
+      ledBackgroundEnabled: _ledBackgroundEnabled, // 保存 LED 背景狀態
     );
 
+    // 輸出將要保存的 Scroller 信息
+    print('Scroller to be saved:');
+    print('- ID: ${scroller.id}');
+    print('- Text: ${scroller.text}');
+    print('- Font size: ${scroller.fontSize}');
+    print('- Font family: ${scroller.fontFamily}');
+    print('- Text color: ${scroller.textColor}');
+    print('- Background color: ${scroller.backgroundColor}');
+    print('- Direction: ${scroller.direction}');
+    print('- Speed: ${scroller.speed}');
+    print('- LED Background Enabled: ${scroller.ledBackgroundEnabled}');
+
     if (_isEditing) {
+      print('Updating existing scroller');
       ref.read(scrollersProvider.notifier).updateScroller(scroller);
     } else {
+      print('Creating new scroller');
       ref.read(scrollersProvider.notifier).addScroller(scroller);
     }
 
-    // 使用 go 替代 pop，保持導航一致性
+    // 使用 go 替代 pop
     context.go('/');
 
     ScaffoldMessenger.of(context).showSnackBar(
@@ -109,6 +143,48 @@ class _CreateScreenState extends ConsumerState<CreateScreen>
         backgroundColor: Colors.green,
       ),
     );
+  }
+
+  void _showPreview() {
+    final currentScroller = ref.read(currentScrollerProvider);
+
+    // 創建或更新臨時預覽用的Scroller
+    final previewScroller = currentScroller == null
+        ? Scroller.create(
+      text: _textController.text.isEmpty
+          ? 'Preview Text'
+          : _textController.text,
+      fontSize: _fontSize,
+      fontFamily: _fontFamily,
+      textColor: _textColor,
+      backgroundColor: _backgroundColor,
+      direction: _direction,
+      speed: _speed,
+      ledBackgroundEnabled: _ledBackgroundEnabled, // 包含 LED 背景狀態
+    )
+        : currentScroller.copyWith(
+      text: _textController.text,
+      fontSize: _fontSize,
+      fontFamily: _fontFamily,
+      textColor: _textColor,
+      backgroundColor: _backgroundColor,
+      direction: _direction,
+      speed: _speed,
+      ledBackgroundEnabled: _ledBackgroundEnabled, // 包含 LED 背景狀態
+    );
+
+    // 更新當前的Scroller提供者
+    ref.read(currentScrollerProvider.notifier).state = previewScroller;
+
+    // 確保預覽頁面使用當前的LED效果設置 - 這是在按鈕事件中所以可以安全更新
+    ref.read(ledEffectEnabledProvider.notifier).state = _ledBackgroundEnabled;
+
+    // 設置預覽模式
+    ref.read(previewModeProvider.notifier).state =
+    _isEditing ? PreviewMode.fromEdit : PreviewMode.fromCreate;
+
+    // 統一使用 go 導航到預覽頁面
+    context.go('/preview');
   }
 
   @override
@@ -155,13 +231,12 @@ class _CreateScreenState extends ConsumerState<CreateScreen>
                           _textController.text.isEmpty ? 'Happy New Year !!!!' : _textController.text,
                           style: _getFontStyle(),
                           textAlign: TextAlign.center,
-                        )
-                        ,
+                        ),
                       ),
                     ),
 
                     // LED遮罩
-                    if (_ledBackgroundOn)
+                    if (_ledBackgroundEnabled)
                       Positioned.fill(
                         child: IgnorePointer(
                           child: CustomPaint(
@@ -244,17 +319,17 @@ class _CreateScreenState extends ConsumerState<CreateScreen>
                             EffectTab(
                               direction: _direction,
                               speed: _speed,
-                              ledBackgroundOn: _ledBackgroundOn,
+                              ledBackgroundOn: _ledBackgroundEnabled, // 使用本地狀態
                               onDirectionChanged: (dir) =>
                                   setState(() => _direction = dir),
                               onSpeedChanged: (spd) =>
                                   setState(() => _speed = spd),
                               onLedBackgroundChanged: (isOn) {
-                                setState(() => _ledBackgroundOn = isOn);
-                                // 更新全局LED效果狀態
-                                ref
-                                    .read(ledEffectEnabledProvider.notifier)
-                                    .state = isOn;
+                                setState(() => _ledBackgroundEnabled = isOn);
+
+                                // 可以安全地在用戶操作回調中更新 Provider
+                                ref.read(ledEffectEnabledProvider.notifier).state = isOn;
+                                print('LED background changed to: $isOn');
                               },
                             ),
                           ],
@@ -267,46 +342,12 @@ class _CreateScreenState extends ConsumerState<CreateScreen>
 
               const SizedBox(height: 24),
 
-              // 底部按鈕
+              // 底部按鈕 - 更新文字以符合當前模式
               Row(
                 children: [
                   Expanded(
                     child: ElevatedButton(
-                      onPressed: () {
-                        final currentScroller = ref.read(currentScrollerProvider);
-
-                        // 如果是新建模式或當前沒有Scroller，創建一個新的
-                        final updatedScroller = currentScroller == null
-                            ? Scroller.create(
-                          text: _textController.text.isEmpty
-                              ? 'Preview Text'
-                              : _textController.text,
-                          fontSize: _fontSize,
-                          fontFamily: _fontFamily,
-                          textColor: _textColor,
-                          backgroundColor: _backgroundColor,
-                          direction: _direction,
-                          speed: _speed,
-                        )
-                            : currentScroller.copyWith(
-                          text: _textController.text,
-                          fontSize: _fontSize,
-                          fontFamily: _fontFamily,
-                          textColor: _textColor,
-                          backgroundColor: _backgroundColor,
-                          direction: _direction,
-                          speed: _speed,
-                        );
-
-                        // 更新當前的Scroller提供者
-                        ref.read(currentScrollerProvider.notifier).state = updatedScroller;
-
-                        // 確保預覽頁面使用當前的LED效果設置
-                        ref.read(ledEffectEnabledProvider.notifier).state = _ledBackgroundOn;
-
-                        // 使用 go 替代 push
-                        context.go('/preview');
-                      },
+                      onPressed: _showPreview,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF31314F),
                         foregroundColor: Colors.white,
@@ -335,9 +376,9 @@ class _CreateScreenState extends ConsumerState<CreateScreen>
                         ),
                         elevation: 0,
                       ),
-                      child: const Text(
-                        'Save',
-                        style: TextStyle(fontSize: 16),
+                      child: Text(
+                        _isEditing ? 'Update' : 'Save', // 根據模式調整按鈕文本
+                        style: const TextStyle(fontSize: 16),
                       ),
                     ),
                   ),

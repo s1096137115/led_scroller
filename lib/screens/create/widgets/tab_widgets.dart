@@ -201,6 +201,8 @@ class StyleTab extends StatelessWidget {
 
 /// Effect標籤內容
 /// 處理滾動方向、速度和特效設定
+/// Effect標籤內容
+/// 處理滾動方向、速度和特效設定
 class EffectTab extends StatelessWidget {
   final ScrollDirection direction;
   final int speed;
@@ -268,7 +270,10 @@ class EffectTab extends StatelessWidget {
             SwitchListTile(
               title: const Text('LED Background'),
               value: ledBackgroundOn,
-              onChanged: onLedBackgroundChanged,
+              onChanged: (value) {
+                print('LED背景效果切換為: $value');
+                onLedBackgroundChanged(value);
+              },
               activeColor: Theme.of(context).colorScheme.primary,
             ),
           ],

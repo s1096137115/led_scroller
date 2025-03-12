@@ -23,6 +23,7 @@ _$ScrollerImpl _$$ScrollerImplFromJson(Map<String, dynamic> json) =>
               ?.map((e) => e as String)
               .toList() ??
           const [],
+      ledBackgroundEnabled: json['ledBackgroundEnabled'] as bool? ?? true,
     );
 
 Map<String, dynamic> _$$ScrollerImplToJson(_$ScrollerImpl instance) =>
@@ -37,6 +38,7 @@ Map<String, dynamic> _$$ScrollerImplToJson(_$ScrollerImpl instance) =>
       'speed': instance.speed,
       'isInGroup': instance.isInGroup,
       'groupIds': instance.groupIds,
+      'ledBackgroundEnabled': instance.ledBackgroundEnabled,
     };
 
 const _$ScrollDirectionEnumMap = {

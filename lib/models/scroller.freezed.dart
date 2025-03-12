@@ -30,6 +30,7 @@ mixin _$Scroller {
   int get speed => throw _privateConstructorUsedError;
   bool get isInGroup => throw _privateConstructorUsedError;
   List<String> get groupIds => throw _privateConstructorUsedError;
+  bool get ledBackgroundEnabled => throw _privateConstructorUsedError;
 
   /// Serializes this Scroller to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -56,7 +57,8 @@ abstract class $ScrollerCopyWith<$Res> {
       ScrollDirection direction,
       int speed,
       bool isInGroup,
-      List<String> groupIds});
+      List<String> groupIds,
+      bool ledBackgroundEnabled});
 }
 
 /// @nodoc
@@ -84,6 +86,7 @@ class _$ScrollerCopyWithImpl<$Res, $Val extends Scroller>
     Object? speed = null,
     Object? isInGroup = null,
     Object? groupIds = null,
+    Object? ledBackgroundEnabled = null,
   }) {
     return _then(_value.copyWith(
       id: null == id
@@ -126,6 +129,10 @@ class _$ScrollerCopyWithImpl<$Res, $Val extends Scroller>
           ? _value.groupIds
           : groupIds // ignore: cast_nullable_to_non_nullable
               as List<String>,
+      ledBackgroundEnabled: null == ledBackgroundEnabled
+          ? _value.ledBackgroundEnabled
+          : ledBackgroundEnabled // ignore: cast_nullable_to_non_nullable
+              as bool,
     ) as $Val);
   }
 }
@@ -148,7 +155,8 @@ abstract class _$$ScrollerImplCopyWith<$Res>
       ScrollDirection direction,
       int speed,
       bool isInGroup,
-      List<String> groupIds});
+      List<String> groupIds,
+      bool ledBackgroundEnabled});
 }
 
 /// @nodoc
@@ -174,6 +182,7 @@ class __$$ScrollerImplCopyWithImpl<$Res>
     Object? speed = null,
     Object? isInGroup = null,
     Object? groupIds = null,
+    Object? ledBackgroundEnabled = null,
   }) {
     return _then(_$ScrollerImpl(
       id: null == id
@@ -216,6 +225,10 @@ class __$$ScrollerImplCopyWithImpl<$Res>
           ? _value._groupIds
           : groupIds // ignore: cast_nullable_to_non_nullable
               as List<String>,
+      ledBackgroundEnabled: null == ledBackgroundEnabled
+          ? _value.ledBackgroundEnabled
+          : ledBackgroundEnabled // ignore: cast_nullable_to_non_nullable
+              as bool,
     ));
   }
 }
@@ -233,7 +246,8 @@ class _$ScrollerImpl with DiagnosticableTreeMixin implements _Scroller {
       this.direction = ScrollDirection.left,
       this.speed = 5,
       this.isInGroup = false,
-      final List<String> groupIds = const []})
+      final List<String> groupIds = const [],
+      this.ledBackgroundEnabled = true})
       : _groupIds = groupIds;
 
   factory _$ScrollerImpl.fromJson(Map<String, dynamic> json) =>
@@ -270,8 +284,12 @@ class _$ScrollerImpl with DiagnosticableTreeMixin implements _Scroller {
   }
 
   @override
+  @JsonKey()
+  final bool ledBackgroundEnabled;
+
+  @override
   String toString({DiagnosticLevel minLevel = DiagnosticLevel.info}) {
-    return 'Scroller(id: $id, text: $text, fontSize: $fontSize, fontFamily: $fontFamily, textColor: $textColor, backgroundColor: $backgroundColor, direction: $direction, speed: $speed, isInGroup: $isInGroup, groupIds: $groupIds)';
+    return 'Scroller(id: $id, text: $text, fontSize: $fontSize, fontFamily: $fontFamily, textColor: $textColor, backgroundColor: $backgroundColor, direction: $direction, speed: $speed, isInGroup: $isInGroup, groupIds: $groupIds, ledBackgroundEnabled: $ledBackgroundEnabled)';
   }
 
   @override
@@ -288,7 +306,8 @@ class _$ScrollerImpl with DiagnosticableTreeMixin implements _Scroller {
       ..add(DiagnosticsProperty('direction', direction))
       ..add(DiagnosticsProperty('speed', speed))
       ..add(DiagnosticsProperty('isInGroup', isInGroup))
-      ..add(DiagnosticsProperty('groupIds', groupIds));
+      ..add(DiagnosticsProperty('groupIds', groupIds))
+      ..add(DiagnosticsProperty('ledBackgroundEnabled', ledBackgroundEnabled));
   }
 
   @override
@@ -311,7 +330,9 @@ class _$ScrollerImpl with DiagnosticableTreeMixin implements _Scroller {
             (identical(other.speed, speed) || other.speed == speed) &&
             (identical(other.isInGroup, isInGroup) ||
                 other.isInGroup == isInGroup) &&
-            const DeepCollectionEquality().equals(other._groupIds, _groupIds));
+            const DeepCollectionEquality().equals(other._groupIds, _groupIds) &&
+            (identical(other.ledBackgroundEnabled, ledBackgroundEnabled) ||
+                other.ledBackgroundEnabled == ledBackgroundEnabled));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
@@ -327,7 +348,8 @@ class _$ScrollerImpl with DiagnosticableTreeMixin implements _Scroller {
       direction,
       speed,
       isInGroup,
-      const DeepCollectionEquality().hash(_groupIds));
+      const DeepCollectionEquality().hash(_groupIds),
+      ledBackgroundEnabled);
 
   /// Create a copy of Scroller
   /// with the given fields replaced by the non-null parameter values.
@@ -356,7 +378,8 @@ abstract class _Scroller implements Scroller {
       final ScrollDirection direction,
       final int speed,
       final bool isInGroup,
-      final List<String> groupIds}) = _$ScrollerImpl;
+      final List<String> groupIds,
+      final bool ledBackgroundEnabled}) = _$ScrollerImpl;
 
   factory _Scroller.fromJson(Map<String, dynamic> json) =
       _$ScrollerImpl.fromJson;
@@ -381,6 +404,8 @@ abstract class _Scroller implements Scroller {
   bool get isInGroup;
   @override
   List<String> get groupIds;
+  @override
+  bool get ledBackgroundEnabled;
 
   /// Create a copy of Scroller
   /// with the given fields replaced by the non-null parameter values.

@@ -21,39 +21,63 @@ class ScrollersNotifier extends StateNotifier<List<Scroller>> {
 
   // 加載與保存方法
   Future<void> _loadScrollers() async {
+    print('Loading scrollers...');
     final scrollers = await _storageService.getScrollers();
+    print('Loaded ${scrollers.length} scrollers');
+    for (var scroller in scrollers) {
+      print('Loaded: ${scroller.id} - ${scroller.text} - ${scroller.textColor} - ${scroller.backgroundColor}');
+    }
     state = scrollers;
   }
 
   Future<void> _saveScrollers() async {
-    await _storageService.saveScrollers(state);
+    print('Saving scrollers...');
+    for (var scroller in state) {
+      print('Saving: ${scroller.id} - ${scroller.text} - ${scroller.textColor} - ${scroller.backgroundColor}');
+    }
+    final result = await _storageService.saveScrollers(state);
+    print('Save result: $result');
   }
 
   // CRUD操作
   Future<void> addScroller(Scroller scroller) async {
+    print('Adding scroller: ${scroller.id} - ${scroller.text}');
     state = [...state, scroller];
     await _saveScrollers();
   }
 
   Future<void> updateScroller(Scroller scroller) async {
+    print('Updating scroller: ${scroller.id} - ${scroller.text}');
+    print('Current state has ${state.length} scrollers');
+
+    // 檢查要更新的 scroller 是否存在
+    final exists = state.any((item) => item.id == scroller.id);
+    if (!exists) {
+      print('Warning: Trying to update a scroller that does not exist: ${scroller.id}');
+    }
+
+    // 進行更新，確保完全替換
     state = [
       for (final item in state)
         if (item.id == scroller.id) scroller else item
     ];
+
+    print('After update, state has ${state.length} scrollers');
     await _saveScrollers();
   }
 
   Future<void> deleteScroller(String id) async {
+    print('Deleting scroller: $id');
     state = state.where((item) => item.id != id).toList();
     await _saveScrollers();
   }
 
   Future<void> deleteSelectedScrollers(List<String> ids) async {
+    print('Deleting multiple scrollers: $ids');
     state = state.where((item) => !ids.contains(item.id)).toList();
     await _saveScrollers();
   }
 }
-
 /// 多選Scroller狀態通知器
 /// 管理選擇狀態變化，提供切換、選擇、取消選擇等操作
 /// 用於群組創建和批量刪除功能

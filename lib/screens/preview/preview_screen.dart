@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'dart:ui'; // 用於模糊效果
+import '../../providers/preview_mode_provider.dart';
 import '../../providers/scroller_providers.dart';
 import '../../models/scroller.dart';
 import '../create/widgets/led_grid_painter.dart'; // 引入LED點陣效果
@@ -29,14 +30,28 @@ class _PreviewScreenState extends ConsumerState<PreviewScreen> with SingleTicker
   bool _shouldBlurHeader = false;
   bool _shouldBlurFooter = false;
 
-  // 監聽LED效果狀態變化
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _showLedEffect = ref.watch(ledEffectEnabledProvider);
+
+    // 從當前 Scroller 獲取 LED 效果狀態
+    final scroller = ref.watch(currentScrollerProvider);
+    if (scroller != null) {
+      setState(() {
+        _showLedEffect = scroller.ledBackgroundEnabled;
+      });
+
+      // 使用 Future 延遲更新 Provider，避免在構建期間修改
+      Future(() {
+        // 確保組件仍然掛載
+        if (mounted) {
+          // 同步全局 LED 效果狀態 (用於界面一致性)
+          ref.read(ledEffectEnabledProvider.notifier).state = scroller.ledBackgroundEnabled;
+        }
+      });
+    }
 
     // 確保當 currentScroller 變化時也更新動畫
-    final scroller = ref.watch(currentScrollerProvider);
     if (scroller != null) {
       _updateAnimation();
     }
@@ -53,17 +68,22 @@ class _PreviewScreenState extends ConsumerState<PreviewScreen> with SingleTicker
     // 初始化適當的動畫方向
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _updateAnimation(); // 確保動畫在初始化時立即更新
+
+      // 從當前 Scroller 獲取 LED 效果狀態
+      final scroller = ref.read(currentScrollerProvider);
+      if (scroller != null) {
+        setState(() {
+          _showLedEffect = scroller.ledBackgroundEnabled;
+        });
+
+        // 使用 addPostFrameCallback 確保在構建完成後更新
+        // 同步全局 LED 效果狀態 (用於界面一致性)
+        ref.read(ledEffectEnabledProvider.notifier).state = scroller.ledBackgroundEnabled;
+      }
     });
 
     // 添加滾動監聽器來判斷是否需要模糊效果
     _scrollController.addListener(_updateBlurStatus);
-
-    // 從Provider獲取LED效果狀態
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      setState(() {
-        _showLedEffect = ref.read(ledEffectEnabledProvider);
-      });
-    });
   }
 
   @override
@@ -170,16 +190,51 @@ class _PreviewScreenState extends ConsumerState<PreviewScreen> with SingleTicker
     });
   }
 
-  // 從Provider更新LED效果狀態
-  void _updateLedEffectState() {
-    setState(() {
-      _showLedEffect = ref.read(ledEffectEnabledProvider);
-    });
+  // 保存當前 Scroller
+  void _saveScroller() {
+    final scroller = ref.read(currentScrollerProvider);
+    if (scroller == null) return;
+
+    // 輸出調試信息
+    print('Saving scroller from preview screen:');
+    print('- ID: ${scroller.id}');
+    print('- Text: ${scroller.text}');
+    print('- Font size: ${scroller.fontSize}');
+    print('- Font family: ${scroller.fontFamily}');
+    print('- Text color: ${scroller.textColor}');
+    print('- Background color: ${scroller.backgroundColor}');
+    print('- Direction: ${scroller.direction}');
+    print('- Speed: ${scroller.speed}');
+    print('- LED Background Enabled: ${scroller.ledBackgroundEnabled}');
+
+    // 保存或更新 Scroller
+    final mode = ref.read(previewModeProvider);
+    final isNew = mode == PreviewMode.fromCreate;
+
+    if (isNew) {
+      print('Creating new scroller');
+      ref.read(scrollersProvider.notifier).addScroller(scroller);
+    } else {
+      print('Updating existing scroller');
+      ref.read(scrollersProvider.notifier).updateScroller(scroller);
+    }
+
+    // 保存成功提示
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(isNew ? 'Scroller created' : 'Scroller updated'),
+        backgroundColor: Colors.green,
+      ),
+    );
+
+    // 導航到首頁
+    context.go('/');
   }
 
   @override
   Widget build(BuildContext context) {
     final scroller = ref.watch(currentScrollerProvider);
+    final previewMode = ref.watch(previewModeProvider);
 
     if (scroller == null) {
       return const Scaffold(
@@ -192,6 +247,13 @@ class _PreviewScreenState extends ConsumerState<PreviewScreen> with SingleTicker
     final backgroundColor = Color(int.parse(scroller.backgroundColor.replaceAll('#', '0xFF')));
     final textColor = Color(int.parse(scroller.textColor.replaceAll('#', '0xFF')));
 
+    // 確保 _showLedEffect 與 scroller.ledBackgroundEnabled 同步
+    if (_showLedEffect != scroller.ledBackgroundEnabled) {
+      setState(() {
+        _showLedEffect = scroller.ledBackgroundEnabled;
+      });
+    }
+
     return Scaffold(
       backgroundColor: Colors.black,
       extendBodyBehindAppBar: true,
@@ -203,7 +265,19 @@ class _PreviewScreenState extends ConsumerState<PreviewScreen> with SingleTicker
         automaticallyImplyLeading: false,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.go('/'), // 使用go而不是pop
+          onPressed: () {
+            // 根據預覽模式決定返回行為
+            switch (previewMode) {
+              case PreviewMode.fromCreate:
+              case PreviewMode.fromEdit:
+                context.go('/create'); // 返回創建/編輯頁面
+                break;
+              case PreviewMode.fromHome:
+              default:
+                context.go('/'); // 返回首頁
+                break;
+            }
+          },
         ),
         flexibleSpace: _shouldBlurHeader ? ClipRect(
           child: BackdropFilter(
@@ -239,8 +313,8 @@ class _PreviewScreenState extends ConsumerState<PreviewScreen> with SingleTicker
               ),
             ),
 
-            // LED點陣效果
-            if (_showLedEffect)
+            // LED點陣效果 - 使用 scroller 的 ledBackgroundEnabled 屬性
+            if (scroller.ledBackgroundEnabled)
               Positioned.fill(
                 child: IgnorePointer(
                   child: CustomPaint(
@@ -256,7 +330,7 @@ class _PreviewScreenState extends ConsumerState<PreviewScreen> with SingleTicker
                 left: 0,
                 right: 0,
                 bottom: 0,
-                child: _buildBottomControls(context),
+                child: _buildBottomControls(context, previewMode),
               ),
           ],
         ),
@@ -295,8 +369,8 @@ class _PreviewScreenState extends ConsumerState<PreviewScreen> with SingleTicker
     );
   }
 
-  // 底部控制按鈕
-  Widget _buildBottomControls(BuildContext context) {
+  // 底部控制按鈕 - 根據預覽模式顯示不同的按鈕
+  Widget _buildBottomControls(BuildContext context, PreviewMode mode) {
     return Container(
       padding: EdgeInsets.only(
         bottom: MediaQuery.of(context).padding.bottom + 8,
@@ -318,38 +392,73 @@ class _PreviewScreenState extends ConsumerState<PreviewScreen> with SingleTicker
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              ElevatedButton(
-                onPressed: () => context.go('/'), // 使用go替代pop
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.grey.shade800.withOpacity(0.7),
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(30),
-                  ),
-                  padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
-                ),
-                child: const Text('Back'),
-              ),
-              ElevatedButton(
-                onPressed: () {
-                  // 使用go替代push
-                  context.go('/create');
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.grey.shade800.withOpacity(0.7),
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(30),
-                  ),
-                  padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
-                ),
-                child: const Text('Edit'),
-              ),
-            ],
+            children: _buildButtonsForMode(mode),
           ),
         ),
       ),
+    );
+  }
+
+  // 根據預覽模式構建不同的按鈕組合
+  List<Widget> _buildButtonsForMode(PreviewMode mode) {
+    switch (mode) {
+      case PreviewMode.fromCreate:
+      // 來自創建頁面 - 顯示編輯和保存按鈕
+        return [
+          ElevatedButton(
+            onPressed: () => context.go('/create'),
+            style: _buttonStyle(),
+            child: const Text('Edit'),
+          ),
+          ElevatedButton(
+            onPressed: _saveScroller,
+            style: _buttonStyle(),
+            child: const Text('Save'),
+          ),
+        ];
+
+      case PreviewMode.fromEdit:
+      // 來自編輯頁面 - 顯示編輯和更新按鈕
+        return [
+          ElevatedButton(
+            onPressed: () => context.go('/create'),
+            style: _buttonStyle(),
+            child: const Text('Edit'),
+          ),
+          ElevatedButton(
+            onPressed: _saveScroller,
+            style: _buttonStyle(),
+            child: const Text('Update'),
+          ),
+        ];
+
+      case PreviewMode.fromHome:
+      default:
+      // 來自首頁 - 顯示返回和編輯按鈕
+        return [
+          ElevatedButton(
+            onPressed: () => context.go('/'),
+            style: _buttonStyle(),
+            child: const Text('Back'),
+          ),
+          ElevatedButton(
+            onPressed: () => context.go('/create'),
+            style: _buttonStyle(),
+            child: const Text('Edit'),
+          ),
+        ];
+    }
+  }
+
+  // 按鈕樣式提取為方法以減少重複代碼
+  ButtonStyle _buttonStyle() {
+    return ElevatedButton.styleFrom(
+      backgroundColor: Colors.grey.shade800.withOpacity(0.7),
+      foregroundColor: Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(30),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
     );
   }
 }

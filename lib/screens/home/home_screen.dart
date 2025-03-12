@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../providers/preview_mode_provider.dart';
 import '../../providers/scroller_providers.dart';
 import '../../models/scroller.dart';
 import 'widgets/scroller_card.dart';
@@ -65,7 +66,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           onPressed: () {
                             // Clear current scroller before creating a new one
                             ref.read(currentScrollerProvider.notifier).state = null;
-                            context.push('/create');
+                            // 使用 go 替代 push
+                            context.go('/create');
                           },
                           child: const Text('+ Create New'),
                         ),
@@ -112,7 +114,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       onPressed: () {
                         // Clear selections before creating a group
                         ref.read(selectedScrollersProvider.notifier).clear();
-                        context.push('/create-group');
+                        // 使用 go 替代 push
+                        context.go('/create-group');
                       },
                       icon: const Icon(Icons.add_circle_outline),
                       label: const Text('Create group'),
@@ -173,9 +176,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               : ScrollerCard(
                             scroller: scroller,
                             onEdit: () {
-                              // 修改流程：點擊scroller時直接進入Preview頁面，而不是Edit頁面
+                              // 點擊Scroller卡片時的行為
                               ref.read(currentScrollerProvider.notifier).state = scroller;
-                              context.push('/preview');
+                              // 設置預覽模式為"從首頁查看"
+                              ref.read(previewModeProvider.notifier).state = PreviewMode.fromHome;
+                              // 使用 go 替代 push
+                              context.go('/preview');
                             },
                           ),
                         );

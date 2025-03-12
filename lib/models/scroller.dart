@@ -24,6 +24,7 @@ class Scroller with _$Scroller {
     @Default(5) int speed,
     @Default(false) bool isInGroup,
     @Default([]) List<String> groupIds,
+    @Default(true) bool ledBackgroundEnabled,  // 新增的 LED 背景狀態屬性，默認為開啟
   }) = _Scroller;
 
   factory Scroller.create({
@@ -34,6 +35,7 @@ class Scroller with _$Scroller {
     required String backgroundColor,
     ScrollDirection direction = ScrollDirection.left,
     int speed = 5,
+    bool ledBackgroundEnabled = true,  // 新增參數
   }) {
     return Scroller(
       id: const Uuid().v4(),
@@ -44,6 +46,7 @@ class Scroller with _$Scroller {
       backgroundColor: backgroundColor,
       direction: direction,
       speed: speed,
+      ledBackgroundEnabled: ledBackgroundEnabled,  // 設置屬性
     );
   }
 

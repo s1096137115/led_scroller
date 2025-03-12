@@ -19,14 +19,40 @@ class StorageService {
       return [];
     }
 
-    final List<dynamic> jsonList = jsonDecode(jsonString);
-    return jsonList.map((json) => Scroller.fromJson(json)).toList();
+    try {
+      final List<dynamic> jsonList = jsonDecode(jsonString);
+      return jsonList.map((json) => Scroller.fromJson(json)).toList();
+    } catch (e) {
+      print('Error loading scrollers: $e');
+      // 出現錯誤時返回空列表，避免應用崩潰
+      return [];
+    }
   }
 
-  Future<void> saveScrollers(List<Scroller> scrollers) async {
-    final prefs = await SharedPreferences.getInstance();
-    final jsonList = scrollers.map((scroller) => scroller.toJson()).toList();
-    await prefs.setString(_scrollersKey, jsonEncode(jsonList));
+  Future<bool> saveScrollers(List<Scroller> scrollers) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+
+      // 將每個 Scroller 轉換為 JSON 並打印，用於調試
+      final jsonList = scrollers.map((scroller) {
+        final json = scroller.toJson();
+        print('Saving scroller: ${scroller.id} with text: ${scroller.text}');
+        print('JSON: $json');
+        return json;
+      }).toList();
+
+      // 將整個列表序列化並保存
+      final jsonString = jsonEncode(jsonList);
+      final result = await prefs.setString(_scrollersKey, jsonString);
+
+      print('Save result: $result');
+      print('Saved JSON string length: ${jsonString.length}');
+
+      return result;
+    } catch (e) {
+      print('Error saving scrollers: $e');
+      return false;
+    }
   }
 
   // Groups
@@ -38,13 +64,39 @@ class StorageService {
       return [];
     }
 
-    final List<dynamic> jsonList = jsonDecode(jsonString);
-    return jsonList.map((json) => ScrollerGroup.fromJson(json)).toList();
+    try {
+      final List<dynamic> jsonList = jsonDecode(jsonString);
+      return jsonList.map((json) => ScrollerGroup.fromJson(json)).toList();
+    } catch (e) {
+      print('Error loading groups: $e');
+      // 出現錯誤時返回空列表，避免應用崩潰
+      return [];
+    }
   }
 
-  Future<void> saveGroups(List<ScrollerGroup> groups) async {
-    final prefs = await SharedPreferences.getInstance();
-    final jsonList = groups.map((group) => group.toJson()).toList();
-    await prefs.setString(_groupsKey, jsonEncode(jsonList));
+  Future<bool> saveGroups(List<ScrollerGroup> groups) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+
+      // 將每個 Group 轉換為 JSON 並打印，用於調試
+      final jsonList = groups.map((group) {
+        final json = group.toJson();
+        print('Saving group: ${group.id} with name: ${group.name}');
+        print('JSON: $json');
+        return json;
+      }).toList();
+
+      // 將整個列表序列化並保存
+      final jsonString = jsonEncode(jsonList);
+      final result = await prefs.setString(_groupsKey, jsonString);
+
+      print('Save result: $result');
+      print('Saved JSON string length: ${jsonString.length}');
+
+      return result;
+    } catch (e) {
+      print('Error saving groups: $e');
+      return false;
+    }
   }
 }
