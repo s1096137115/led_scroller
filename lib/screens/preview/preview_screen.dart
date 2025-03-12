@@ -25,7 +25,7 @@ class _PreviewScreenState extends ConsumerState<PreviewScreen> with SingleTicker
   late Animation<Offset> _offsetAnimation;
 
   // 控制UI顯示的狀態
-  bool _showControls = true;
+  bool _showControls = true; // 初始顯示控制元素
   final ScrollController _scrollController = ScrollController();
   bool _shouldBlurHeader = false;
   bool _shouldBlurFooter = false;
@@ -34,24 +34,19 @@ class _PreviewScreenState extends ConsumerState<PreviewScreen> with SingleTicker
   void didChangeDependencies() {
     super.didChangeDependencies();
 
-    // 從當前 Scroller 獲取 LED 效果狀態
     final scroller = ref.watch(currentScrollerProvider);
     if (scroller != null) {
       setState(() {
         _showLedEffect = scroller.ledBackgroundEnabled;
       });
 
-      // 使用 Future 延遲更新 Provider，避免在構建期間修改
       Future(() {
-        // 確保組件仍然掛載
         if (mounted) {
-          // 同步全局 LED 效果狀態 (用於界面一致性)
           ref.read(ledEffectEnabledProvider.notifier).state = scroller.ledBackgroundEnabled;
         }
       });
     }
 
-    // 確保當 currentScroller 變化時也更新動畫
     if (scroller != null) {
       _updateAnimation();
     }
@@ -65,24 +60,18 @@ class _PreviewScreenState extends ConsumerState<PreviewScreen> with SingleTicker
       vsync: this,
     )..repeat(reverse: false);
 
-    // 初始化適當的動畫方向
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _updateAnimation(); // 確保動畫在初始化時立即更新
+      _updateAnimation();
 
-      // 從當前 Scroller 獲取 LED 效果狀態
       final scroller = ref.read(currentScrollerProvider);
       if (scroller != null) {
         setState(() {
           _showLedEffect = scroller.ledBackgroundEnabled;
         });
-
-        // 使用 addPostFrameCallback 確保在構建完成後更新
-        // 同步全局 LED 效果狀態 (用於界面一致性)
         ref.read(ledEffectEnabledProvider.notifier).state = scroller.ledBackgroundEnabled;
       }
     });
 
-    // 添加滾動監聽器來判斷是否需要模糊效果
     _scrollController.addListener(_updateBlurStatus);
   }
 
@@ -94,14 +83,13 @@ class _PreviewScreenState extends ConsumerState<PreviewScreen> with SingleTicker
     super.dispose();
   }
 
-  // 根據滾動位置更新模糊狀態
   void _updateBlurStatus() {
     final scroller = ref.read(currentScrollerProvider);
     if (scroller == null) return;
 
     if (_scrollController.hasClients) {
       final textLength = scroller.text.length;
-      final threshold = 50; // 假設超過50個字符時需要模糊效果
+      final threshold = 50;
 
       setState(() {
         if (textLength > threshold) {
@@ -119,87 +107,63 @@ class _PreviewScreenState extends ConsumerState<PreviewScreen> with SingleTicker
     final scroller = ref.read(currentScrollerProvider);
     if (scroller == null) return;
 
-    // 調整速度 (1是最慢, 10是最快)
-    final speedFactor = scroller.speed / 5; // 標準化速度
-
-    // 根據速度計算動畫持續時間
+    final speedFactor = scroller.speed / 5;
     final duration = Duration(seconds: (15 / speedFactor).round());
 
-    // 重設控制器以應用新的持續時間
     _controller.duration = duration;
     _controller.reset();
     _controller.repeat(reverse: false);
 
-    // 根據方向和排列設置動畫
     switch (scroller.direction) {
       case ScrollDirection.left:
-      // 左方向：文字轉90度，從下到上移動
         _offsetAnimation = Tween<Offset>(
           begin: const Offset(0.0, 1.0),
           end: const Offset(0.0, -1.0),
-        ).animate(CurvedAnimation(
-          parent: _controller,
-          curve: Curves.linear,
-        ));
+        ).animate(CurvedAnimation(parent: _controller, curve: Curves.linear));
         setState(() {
-          _isVertical = false; // 標記為橫向文字（需要旋轉）
+          _isVertical = false;
         });
         break;
       case ScrollDirection.right:
-      // 右方向：文字轉90度，從上到下移動
         _offsetAnimation = Tween<Offset>(
           begin: const Offset(0.0, -1.0),
           end: const Offset(0.0, 1.0),
-        ).animate(CurvedAnimation(
-          parent: _controller,
-          curve: Curves.linear,
-        ));
+        ).animate(CurvedAnimation(parent: _controller, curve: Curves.linear));
         setState(() {
-          _isVertical = false; // 標記為橫向文字（需要旋轉）
+          _isVertical = false;
         });
         break;
       case ScrollDirection.up:
-      // 上方向：文字不轉，需要斷行，從下到上移動
         _offsetAnimation = Tween<Offset>(
           begin: const Offset(0.0, 1.0),
           end: const Offset(0.0, -1.0),
-        ).animate(CurvedAnimation(
-          parent: _controller,
-          curve: Curves.linear,
-        ));
+        ).animate(CurvedAnimation(parent: _controller, curve: Curves.linear));
         setState(() {
-          _isVertical = true; // 標記為垂直文字（不需要旋轉）
+          _isVertical = true;
         });
         break;
       case ScrollDirection.down:
-      // 下方向：文字不轉，需要斷行，從上到下移動
         _offsetAnimation = Tween<Offset>(
           begin: const Offset(0.0, -1.0),
           end: const Offset(0.0, 1.0),
-        ).animate(CurvedAnimation(
-          parent: _controller,
-          curve: Curves.linear,
-        ));
+        ).animate(CurvedAnimation(parent: _controller, curve: Curves.linear));
         setState(() {
-          _isVertical = true; // 標記為垂直文字（不需要旋轉）
+          _isVertical = true;
         });
         break;
     }
   }
 
-  // 切換控制界面顯示
   void _toggleControls() {
     setState(() {
       _showControls = !_showControls;
     });
   }
 
-  // 保存當前 Scroller
   void _saveScroller() {
     final scroller = ref.read(currentScrollerProvider);
     if (scroller == null) return;
 
-    // 輸出調試信息
     print('Saving scroller from preview screen:');
     print('- ID: ${scroller.id}');
     print('- Text: ${scroller.text}');
@@ -211,7 +175,6 @@ class _PreviewScreenState extends ConsumerState<PreviewScreen> with SingleTicker
     print('- Speed: ${scroller.speed}');
     print('- LED Background Enabled: ${scroller.ledBackgroundEnabled}');
 
-    // 保存或更新 Scroller
     final mode = ref.read(previewModeProvider);
     final isNew = mode == PreviewMode.fromCreate;
 
@@ -223,7 +186,6 @@ class _PreviewScreenState extends ConsumerState<PreviewScreen> with SingleTicker
       ref.read(scrollersProvider.notifier).updateScroller(scroller);
     }
 
-    // 保存成功提示
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(isNew ? 'Scroller created' : 'Scroller updated'),
@@ -231,7 +193,6 @@ class _PreviewScreenState extends ConsumerState<PreviewScreen> with SingleTicker
       ),
     );
 
-    // 導航到首頁
     context.go('/');
   }
 
@@ -251,7 +212,6 @@ class _PreviewScreenState extends ConsumerState<PreviewScreen> with SingleTicker
     final backgroundColor = Color(int.parse(scroller.backgroundColor.replaceAll('#', '0xFF')));
     final textColor = Color(int.parse(scroller.textColor.replaceAll('#', '0xFF')));
 
-    // 確保 _showLedEffect 與 scroller.ledBackgroundEnabled 同步
     if (_showLedEffect != scroller.ledBackgroundEnabled) {
       setState(() {
         _showLedEffect = scroller.ledBackgroundEnabled;
@@ -261,7 +221,8 @@ class _PreviewScreenState extends ConsumerState<PreviewScreen> with SingleTicker
     return Scaffold(
       backgroundColor: Colors.black,
       extendBodyBehindAppBar: true,
-      appBar: _showControls ? AppBar(
+      appBar: _showControls // 根據 _showControls 決定是否顯示 AppBar
+          ? AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         title: const Text('View Full Screen'),
@@ -270,25 +231,26 @@ class _PreviewScreenState extends ConsumerState<PreviewScreen> with SingleTicker
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () {
-            // 根據預覽模式決定返回行為
             switch (previewMode) {
               case PreviewMode.fromCreate:
               case PreviewMode.fromEdit:
-                context.go('/create'); // 返回創建/編輯頁面
+                context.go('/create');
                 break;
               case PreviewMode.fromHome:
               default:
-                context.go('/'); // 返回首頁
+                context.go('/');
                 break;
             }
           },
         ),
-        flexibleSpace: _shouldBlurHeader ? ClipRect(
+        flexibleSpace: _shouldBlurHeader
+            ? ClipRect(
           child: BackdropFilter(
             filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
             child: Container(color: Colors.black.withOpacity(0.3)),
           ),
-        ) : Container(
+        )
+            : Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topCenter,
@@ -297,12 +259,12 @@ class _PreviewScreenState extends ConsumerState<PreviewScreen> with SingleTicker
             ),
           ),
         ),
-      ) : null,
+      )
+          : null, // 全螢幕模式時隱藏 AppBar
       body: GestureDetector(
-        onTap: _toggleControls,
+        onTap: _toggleControls, // 點擊切換全螢幕模式
         child: Stack(
           children: [
-            // 主內容區域
             Container(
               width: double.infinity,
               height: double.infinity,
@@ -327,8 +289,6 @@ class _PreviewScreenState extends ConsumerState<PreviewScreen> with SingleTicker
                 ),
               ),
             ),
-
-            // LED點陣效果 - 使用 scroller 的 ledBackgroundEnabled 屬性
             if (scroller.ledBackgroundEnabled)
               Positioned.fill(
                 child: IgnorePointer(
@@ -338,9 +298,7 @@ class _PreviewScreenState extends ConsumerState<PreviewScreen> with SingleTicker
                   ),
                 ),
               ),
-
-            // 底部控制欄
-            if (_showControls)
+            if (_showControls) // 根據 _showControls 決定是否顯示底部控制欄
               Positioned(
                 left: 0,
                 right: 0,
@@ -353,8 +311,6 @@ class _PreviewScreenState extends ConsumerState<PreviewScreen> with SingleTicker
     );
   }
 
-  // 顯示垂直文字（上/下方向）
-  // 根據Figma設計，垂直方向要有換行效果避免超出屏幕
   Widget _buildVerticalText(
       BuildContext context,
       String text,
@@ -364,7 +320,6 @@ class _PreviewScreenState extends ConsumerState<PreviewScreen> with SingleTicker
       ) {
     final screenWidth = MediaQuery.of(context).size.width;
 
-    // 文字樣式
     final TextStyle textStyle = TextStyle(
       color: color,
       fontSize: fontSize,
@@ -373,12 +328,10 @@ class _PreviewScreenState extends ConsumerState<PreviewScreen> with SingleTicker
       height: 1.2,
     );
 
-    // 使用TextPainter來測量文字寬度
     final TextPainter measurePainter = TextPainter(
       textDirection: TextDirection.ltr,
     );
 
-    // 基於單詞的智能斷行
     final words = text.split(' ');
     final List<String> lines = [];
     String currentLine = '';
@@ -393,7 +346,6 @@ class _PreviewScreenState extends ConsumerState<PreviewScreen> with SingleTicker
           lines.add(currentLine);
           currentLine = word;
         } else {
-          // 如果單詞太長，直接添加
           lines.add(word);
         }
       } else {
@@ -401,7 +353,6 @@ class _PreviewScreenState extends ConsumerState<PreviewScreen> with SingleTicker
       }
     }
 
-    // 添加最後一行
     if (currentLine.isNotEmpty) {
       lines.add(currentLine);
     }
@@ -424,7 +375,6 @@ class _PreviewScreenState extends ConsumerState<PreviewScreen> with SingleTicker
     );
   }
 
-  // 顯示水平文字（左/右方向）- 旋轉90度
   Widget _buildHorizontalText(
       String text,
       Color color,
@@ -432,7 +382,7 @@ class _PreviewScreenState extends ConsumerState<PreviewScreen> with SingleTicker
       String fontFamily,
       ) {
     return RotatedBox(
-      quarterTurns: 1, // 旋轉90度（順時針）
+      quarterTurns: 1,
       child: Text(
         text,
         style: TextStyle(
@@ -446,7 +396,6 @@ class _PreviewScreenState extends ConsumerState<PreviewScreen> with SingleTicker
     );
   }
 
-  // 底部控制按鈕 - 根據預覽模式顯示不同的按鈕
   Widget _buildBottomControls(BuildContext context, PreviewMode mode) {
     return Container(
       padding: EdgeInsets.only(
@@ -476,11 +425,9 @@ class _PreviewScreenState extends ConsumerState<PreviewScreen> with SingleTicker
     );
   }
 
-  // 根據預覽模式構建不同的按鈕組合
   List<Widget> _buildButtonsForMode(PreviewMode mode) {
     switch (mode) {
       case PreviewMode.fromCreate:
-      // 來自創建頁面 - 顯示編輯和保存按鈕
         return [
           ElevatedButton(
             onPressed: () => context.go('/create'),
@@ -493,9 +440,7 @@ class _PreviewScreenState extends ConsumerState<PreviewScreen> with SingleTicker
             child: const Text('Save'),
           ),
         ];
-
       case PreviewMode.fromEdit:
-      // 來自編輯頁面 - 顯示編輯和更新按鈕
         return [
           ElevatedButton(
             onPressed: () => context.go('/create'),
@@ -508,10 +453,8 @@ class _PreviewScreenState extends ConsumerState<PreviewScreen> with SingleTicker
             child: const Text('Update'),
           ),
         ];
-
       case PreviewMode.fromHome:
       default:
-      // 來自首頁 - 顯示返回和編輯按鈕
         return [
           ElevatedButton(
             onPressed: () => context.go('/'),
@@ -527,7 +470,6 @@ class _PreviewScreenState extends ConsumerState<PreviewScreen> with SingleTicker
     }
   }
 
-  // 按鈕樣式提取為方法以減少重複代碼
   ButtonStyle _buttonStyle() {
     return ElevatedButton.styleFrom(
       backgroundColor: Colors.grey.shade800.withOpacity(0.7),
