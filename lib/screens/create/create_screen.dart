@@ -76,23 +76,23 @@ class _CreateScreenState extends ConsumerState<CreateScreen>
 
     final scroller = _isEditing
         ? ref.read(currentScrollerProvider)!.copyWith(
-              text: _textController.text,
-              fontSize: _fontSize,
-              fontFamily: _fontFamily,
-              textColor: _textColor,
-              backgroundColor: _backgroundColor,
-              direction: _direction,
-              speed: _speed,
-            )
+      text: _textController.text,
+      fontSize: _fontSize,
+      fontFamily: _fontFamily,
+      textColor: _textColor,
+      backgroundColor: _backgroundColor,
+      direction: _direction,
+      speed: _speed,
+    )
         : Scroller.create(
-            text: _textController.text,
-            fontSize: _fontSize,
-            fontFamily: _fontFamily,
-            textColor: _textColor,
-            backgroundColor: _backgroundColor,
-            direction: _direction,
-            speed: _speed,
-          );
+      text: _textController.text,
+      fontSize: _fontSize,
+      fontFamily: _fontFamily,
+      textColor: _textColor,
+      backgroundColor: _backgroundColor,
+      direction: _direction,
+      speed: _speed,
+    );
 
     if (_isEditing) {
       ref.read(scrollersProvider.notifier).updateScroller(scroller);
@@ -100,7 +100,8 @@ class _CreateScreenState extends ConsumerState<CreateScreen>
       ref.read(scrollersProvider.notifier).addScroller(scroller);
     }
 
-    context.pop();
+    // 使用 go 替代 pop，保持導航一致性
+    context.go('/');
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -120,7 +121,7 @@ class _CreateScreenState extends ConsumerState<CreateScreen>
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.pop(),
+          onPressed: () => context.go('/'),
         ),
         actions: [
           IconButton(
@@ -238,7 +239,7 @@ class _CreateScreenState extends ConsumerState<CreateScreen>
                               onTextColorChanged: (color) =>
                                   setState(() => _textColor = color),
                               onBackgroundColorChanged: (color) => setState(
-                                  () => _backgroundColor = color), // 新增背景顏色更改處理
+                                      () => _backgroundColor = color), // 新增背景顏色更改處理
                             ),
                             EffectTab(
                               direction: _direction,
@@ -272,7 +273,11 @@ class _CreateScreenState extends ConsumerState<CreateScreen>
                   Expanded(
                     child: ElevatedButton(
                       onPressed: () {
-                        final previewScroller = Scroller.create(
+                        final currentScroller = ref.read(currentScrollerProvider);
+
+                        // 如果是新建模式或當前沒有Scroller，創建一個新的
+                        final updatedScroller = currentScroller == null
+                            ? Scroller.create(
                           text: _textController.text.isEmpty
                               ? 'Preview Text'
                               : _textController.text,
@@ -282,13 +287,25 @@ class _CreateScreenState extends ConsumerState<CreateScreen>
                           backgroundColor: _backgroundColor,
                           direction: _direction,
                           speed: _speed,
+                        )
+                            : currentScroller.copyWith(
+                          text: _textController.text,
+                          fontSize: _fontSize,
+                          fontFamily: _fontFamily,
+                          textColor: _textColor,
+                          backgroundColor: _backgroundColor,
+                          direction: _direction,
+                          speed: _speed,
                         );
-                        ref.read(currentScrollerProvider.notifier).state =
-                            previewScroller;
+
+                        // 更新當前的Scroller提供者
+                        ref.read(currentScrollerProvider.notifier).state = updatedScroller;
+
                         // 確保預覽頁面使用當前的LED效果設置
-                        ref.read(ledEffectEnabledProvider.notifier).state =
-                            _ledBackgroundOn;
-                        context.push('/preview');
+                        ref.read(ledEffectEnabledProvider.notifier).state = _ledBackgroundOn;
+
+                        // 使用 go 替代 push
+                        context.go('/preview');
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF31314F),
@@ -339,19 +356,30 @@ class _CreateScreenState extends ConsumerState<CreateScreen>
       color: Color(int.parse(_textColor.replaceAll('#', '0xFF'))),
     );
 
-    // 根據選中的字體返回相應的GoogleFonts樣式
+    // 直接使用GoogleFonts的專用方法
     switch (_fontFamily) {
-      case 'Abhaya Libre': return GoogleFonts.abhayaLibre();
-      case 'ABeeZee': return GoogleFonts.aBeeZee(textStyle: baseStyle);
-      case 'Aclonica': return GoogleFonts.aclonica(textStyle: baseStyle);
-      case 'Oswald': return GoogleFonts.oswald(textStyle: baseStyle);
-      case 'Pacifico': return GoogleFonts.pacifico(textStyle: baseStyle);
-      case 'Alfa Slab One': return GoogleFonts.alfaSlabOne(textStyle: baseStyle);
-      case 'Roboto': return GoogleFonts.roboto(textStyle: baseStyle);
-      case 'Lato': return GoogleFonts.lato(textStyle: baseStyle);
-      case 'Bangers': return GoogleFonts.bangers(textStyle: baseStyle);
-      case 'Bungee Inline': return GoogleFonts.bungeeInline(textStyle: baseStyle);
-      default: return GoogleFonts.roboto(textStyle: baseStyle); // 備用字體
+      case 'Abhaya Libre':
+        return GoogleFonts.abhayaLibre(textStyle: baseStyle);
+      case 'ABeeZee':
+        return GoogleFonts.aBeeZee(textStyle: baseStyle);
+      case 'Aclonica':
+        return GoogleFonts.aclonica(textStyle: baseStyle);
+      case 'Oswald':
+        return GoogleFonts.oswald(textStyle: baseStyle);
+      case 'Pacifico':
+        return GoogleFonts.pacifico(textStyle: baseStyle);
+      case 'Alfa Slab One':
+        return GoogleFonts.alfaSlabOne(textStyle: baseStyle);
+      case 'Roboto':
+        return GoogleFonts.roboto(textStyle: baseStyle);
+      case 'Lato':
+        return GoogleFonts.lato(textStyle: baseStyle);
+      case 'Bangers':
+        return GoogleFonts.bangers(textStyle: baseStyle);
+      case 'Bungee Inline':
+        return GoogleFonts.bungeeInline(textStyle: baseStyle);
+      default:
+        return GoogleFonts.roboto(textStyle: baseStyle); // 備用字體
     }
   }
 }

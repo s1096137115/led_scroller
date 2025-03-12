@@ -153,11 +153,10 @@ class StyleTab extends StatelessWidget {
         child: Center(
           child: Text(
             sample, // 'Aa'
-            style:
-            GoogleFonts.getFont(
-              _getFontName(fontFamily),
-              fontSize: 16,
-              color: isSelected ? Colors.white : Colors.grey.shade400,
+            style: _getGoogleFontStyle(
+                fontFamily,
+                16,
+                isSelected ? Colors.white : Colors.grey.shade400
             ),
           ),
         ),
@@ -165,21 +164,37 @@ class StyleTab extends StatelessWidget {
     );
   }
 
-  // 輔助方法：將字體名轉換為Google Fonts格式
-  String _getFontName(String fontFamily) {
-    // 處理特殊情況
+  // 直接使用GoogleFonts的專用方法
+  TextStyle _getGoogleFontStyle(String fontFamily, double fontSize, Color color) {
+    final TextStyle baseStyle = TextStyle(
+      fontSize: fontSize,
+      color: color,
+    );
+
+    // 使用直接的方法而不是getFont
     switch (fontFamily) {
-      case 'Abhaya Libre': return 'abhayaLibre';
-      case 'ABeeZee': return 'aBeeZee';
-      case 'Aclonica': return 'aclonica';
-      case 'Oswald': return 'oswald';
-      case 'Pacifico': return 'pacifico';
-      case 'Alfa Slab One': return 'alfaSlabOne';
-      case 'Roboto': return 'roboto';
-      case 'Lato': return 'lato';
-      case 'Bangers': return 'bangers';
-      case 'Bungee Inline': return 'bungeeInline';
-      default: return 'roboto'; // 備用字體
+      case 'Abhaya Libre':
+        return GoogleFonts.abhayaLibre(textStyle: baseStyle);
+      case 'ABeeZee':
+        return GoogleFonts.aBeeZee(textStyle: baseStyle);
+      case 'Aclonica':
+        return GoogleFonts.aclonica(textStyle: baseStyle);
+      case 'Oswald':
+        return GoogleFonts.oswald(textStyle: baseStyle);
+      case 'Pacifico':
+        return GoogleFonts.pacifico(textStyle: baseStyle);
+      case 'Alfa Slab One':
+        return GoogleFonts.alfaSlabOne(textStyle: baseStyle);
+      case 'Roboto':
+        return GoogleFonts.roboto(textStyle: baseStyle);
+      case 'Lato':
+        return GoogleFonts.lato(textStyle: baseStyle);
+      case 'Bangers':
+        return GoogleFonts.bangers(textStyle: baseStyle);
+      case 'Bungee Inline':
+        return GoogleFonts.bungeeInline(textStyle: baseStyle);
+      default:
+        return GoogleFonts.roboto(textStyle: baseStyle); // 備用字體
     }
   }
 }

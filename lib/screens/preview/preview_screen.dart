@@ -34,6 +34,12 @@ class _PreviewScreenState extends ConsumerState<PreviewScreen> with SingleTicker
   void didChangeDependencies() {
     super.didChangeDependencies();
     _showLedEffect = ref.watch(ledEffectEnabledProvider);
+
+    // 確保當 currentScroller 變化時也更新動畫
+    final scroller = ref.watch(currentScrollerProvider);
+    if (scroller != null) {
+      _updateAnimation();
+    }
   }
 
   @override
@@ -45,7 +51,9 @@ class _PreviewScreenState extends ConsumerState<PreviewScreen> with SingleTicker
     )..repeat(reverse: false);
 
     // 初始化適當的動畫方向
-    _updateAnimation();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _updateAnimation(); // 確保動畫在初始化時立即更新
+    });
 
     // 添加滾動監聽器來判斷是否需要模糊效果
     _scrollController.addListener(_updateBlurStatus);
@@ -96,9 +104,9 @@ class _PreviewScreenState extends ConsumerState<PreviewScreen> with SingleTicker
 
     // 根據速度計算動畫持續時間
     final duration = Duration(seconds: (15 / speedFactor).round());
-    _controller.duration = duration;
 
-    // 重置控制器以應用新的持續時間
+    // 重設控制器以應用新的持續時間
+    _controller.duration = duration;
     _controller.reset();
     _controller.repeat(reverse: false);
 
@@ -112,6 +120,9 @@ class _PreviewScreenState extends ConsumerState<PreviewScreen> with SingleTicker
           parent: _controller,
           curve: Curves.linear,
         ));
+        setState(() {
+          _isVertical = false; // 確保水平顯示
+        });
         break;
       case ScrollDirection.right:
         _offsetAnimation = Tween<Offset>(
@@ -121,6 +132,9 @@ class _PreviewScreenState extends ConsumerState<PreviewScreen> with SingleTicker
           parent: _controller,
           curve: Curves.linear,
         ));
+        setState(() {
+          _isVertical = false; // 確保水平顯示
+        });
         break;
       case ScrollDirection.up:
         _offsetAnimation = Tween<Offset>(
@@ -130,6 +144,9 @@ class _PreviewScreenState extends ConsumerState<PreviewScreen> with SingleTicker
           parent: _controller,
           curve: Curves.linear,
         ));
+        setState(() {
+          _isVertical = true; // 確保垂直顯示
+        });
         break;
       case ScrollDirection.down:
         _offsetAnimation = Tween<Offset>(
@@ -139,6 +156,9 @@ class _PreviewScreenState extends ConsumerState<PreviewScreen> with SingleTicker
           parent: _controller,
           curve: Curves.linear,
         ));
+        setState(() {
+          _isVertical = true; // 確保垂直顯示
+        });
         break;
     }
   }
@@ -183,7 +203,7 @@ class _PreviewScreenState extends ConsumerState<PreviewScreen> with SingleTicker
         automaticallyImplyLeading: false,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.pop(),
+          onPressed: () => context.go('/'), // 使用go而不是pop
         ),
         flexibleSpace: _shouldBlurHeader ? ClipRect(
           child: BackdropFilter(
@@ -300,7 +320,7 @@ class _PreviewScreenState extends ConsumerState<PreviewScreen> with SingleTicker
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
               ElevatedButton(
-                onPressed: () => context.pop(),
+                onPressed: () => context.go('/'), // 使用go替代pop
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.grey.shade800.withOpacity(0.7),
                   foregroundColor: Colors.white,
@@ -313,9 +333,8 @@ class _PreviewScreenState extends ConsumerState<PreviewScreen> with SingleTicker
               ),
               ElevatedButton(
                 onPressed: () {
-                  // 導航到編輯頁面，保持當前scroller的狀態
-                  // 注意：此時不需要pop，而是直接push到編輯頁面
-                  context.push('/create');
+                  // 使用go替代push
+                  context.go('/create');
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.grey.shade800.withOpacity(0.7),
