@@ -108,7 +108,7 @@ class _PreviewScreenState extends ConsumerState<PreviewScreen> with SingleTicker
     final scroller = ref.read(currentScrollerProvider);
     if (scroller == null) return;
 
-    final speedFactor = scroller.speed / 5;
+    final speedFactor = scroller.speed;
     final duration = Duration(seconds: (15 / speedFactor).round());
 
     _controller.duration = duration;

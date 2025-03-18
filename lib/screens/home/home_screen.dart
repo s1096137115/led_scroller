@@ -8,7 +8,7 @@ import 'widgets/scroller_card.dart';
 
 /// 首頁畫面
 /// 顯示所有已建立的Scroller列表
-/// 提供建立新Scroller和群組的入口
+/// 提供建立新Scroller的入口
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
@@ -58,7 +58,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             colors: [Colors.blue, Colors.purple, Colors.red],
                           ),
                         ),
-                        child: const Icon(Icons.auto_awesome, color: Colors.white),
+                        child: Image.asset('assets/app_icon.png'),
                       ),
                       const SizedBox(width: 16),
                       Expanded(
@@ -88,7 +88,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ),
               const SizedBox(height: 16),
 
-              // Action Buttons Row (Delete and Create Group)
+              // Action Buttons Row (Only Delete Button)
               Row(
                 children: [
                   // Delete Button
@@ -97,28 +97,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       onPressed: _isSelectionMode ? _deleteSelected : _enterSelectionMode,
                       icon: const Icon(Icons.delete),
                       label: Text(_isSelectionMode ? 'Delete Selected' : 'Delete'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF2A2A3E),
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(24),
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  // Create Group Button
-                  Expanded(
-                    child: ElevatedButton.icon(
-                      onPressed: () {
-                        // Clear selections before creating a group
-                        ref.read(selectedScrollersProvider.notifier).clear();
-                        // 使用 go 替代 push
-                        context.go('/create-group');
-                      },
-                      icon: const Icon(Icons.add_circle_outline),
-                      label: const Text('Create group'),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF2A2A3E),
                         foregroundColor: Colors.white,

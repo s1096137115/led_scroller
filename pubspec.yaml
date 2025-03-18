@@ -47,6 +47,12 @@ dev_dependencies:
   build_runner: ^2.4.7
   freezed: ^2.4.6
   json_serializable: ^6.7.1
+  flutter_launcher_icons: ^0.14.3
+
+flutter_launcher_icons:
+  android: false
+  ios: true # 是否生成 iOS 圖標
+  image_path: "assets/app_icon.png" # 你的圖標檔案路徑
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -60,9 +66,8 @@ flutter:
   uses-material-design: true
 
   # To add assets to your application, add an assets section, like this:
-  # assets:
-  #   - images/a_dot_burr.jpeg
-  #   - images/a_dot_ham.jpeg
+  assets:
+    - assets/app_icon.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
