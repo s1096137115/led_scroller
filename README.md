@@ -174,3 +174,19 @@
 - 新增全螢幕切換功能：點擊螢幕時隱藏 AppBar 和底部控制欄，再次點擊恢復顯示
 - 優化 UI 控制邏輯：利用現有 `_showControls` 狀態，動態控制 AppBar 和底部控制欄的可見性
 - 確保功能一致性：在全螢幕模式下保留核心動畫與 LED 效果，僅隱藏控制元素
+
+### 已完成 [2025-03-13 19:40]
+- 字體一致性優化：
+    - 創建字體工具類 `FontUtils`，提供統一的 GoogleFonts 處理邏輯
+    - 修改 ScrollerCard 使用 FontUtils 正確顯示所選字體
+    - 更新 PreviewScreen 使用 FontUtils 確保字體顯示一致
+    - 重構 CreateScreen 使用 FontUtils，簡化代碼並保持一致性
+    - 解決了跨頁面字體顯示不一致的問題
+
+### 已完成 [2025-03-13 20:40]
+- 字體一致性優化：
+    - 創建字體工具類 `FontUtils`，提供統一的 GoogleFonts 處理邏輯
+    - 修改 ScrollerCard 使用 FontUtils 正確顯示所選字體
+    - 更新 PreviewScreen 使用 FontUtils 確保字體顯示一致
+    - 重構 CreateScreen 使用 FontUtils，簡化代碼並保持一致性
+    - 解決了跨頁面字體顯示不一致的問題

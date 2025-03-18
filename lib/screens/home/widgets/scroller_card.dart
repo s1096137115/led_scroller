@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../models/scroller.dart';
 import '../../../providers/scroller_providers.dart';
+import '../../../utils/font_utils.dart'; // 引入字體工具類
 
 /// Scroller卡片組件
 /// 在首頁列表中顯示單個Scroller的預覽
@@ -19,9 +20,9 @@ class ScrollerCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // Convert hex string to color
-    final backgroundColor = Color(int.parse(scroller.backgroundColor.replaceAll('#', '0xFF')));
-    final textColor = Color(int.parse(scroller.textColor.replaceAll('#', '0xFF')));
+    // Convert hex string to color using font utils
+    final backgroundColor = FontUtils.hexToColor(scroller.backgroundColor);
+    final textColor = FontUtils.hexToColor(scroller.textColor);
 
     return Dismissible(
       key: Key(scroller.id),
@@ -58,13 +59,14 @@ class ScrollerCard extends ConsumerWidget {
           ),
           child: Text(
             scroller.text,
-            style: TextStyle(
-              color: textColor,
-              fontSize: scroller.fontSize.toDouble(),
+            // 使用 FontUtils 而不是直接設置 style
+            style: FontUtils.getGoogleFontStyle(
               fontFamily: scroller.fontFamily,
+              fontSize: scroller.fontSize.toDouble(),
+              color: textColor,
             ),
             maxLines: 1,
-            overflow: TextOverflow.ellipsis,
+            overflow: TextOverflow.visible, // 修改為 visible 移除省略號效果
             textAlign: TextAlign.center,
           ),
         ),

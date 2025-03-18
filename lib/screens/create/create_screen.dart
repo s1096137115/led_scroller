@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../models/scroller.dart';
 import '../../providers/preview_mode_provider.dart';
 import '../../providers/scroller_providers.dart';
+import '../../utils/font_utils.dart';
 import 'widgets/led_grid_painter.dart';
 import 'widgets/tab_widgets.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -392,35 +393,10 @@ class _CreateScreenState extends ConsumerState<CreateScreen>
   }
 
   TextStyle _getFontStyle() {
-    final baseStyle = TextStyle(
+    return FontUtils.getGoogleFontStyle(
+      fontFamily: _fontFamily,
       fontSize: _fontSize.toDouble(),
       color: Color(int.parse(_textColor.replaceAll('#', '0xFF'))),
     );
-
-    // 直接使用GoogleFonts的專用方法
-    switch (_fontFamily) {
-      case 'Abhaya Libre':
-        return GoogleFonts.abhayaLibre(textStyle: baseStyle);
-      case 'ABeeZee':
-        return GoogleFonts.aBeeZee(textStyle: baseStyle);
-      case 'Aclonica':
-        return GoogleFonts.aclonica(textStyle: baseStyle);
-      case 'Oswald':
-        return GoogleFonts.oswald(textStyle: baseStyle);
-      case 'Pacifico':
-        return GoogleFonts.pacifico(textStyle: baseStyle);
-      case 'Alfa Slab One':
-        return GoogleFonts.alfaSlabOne(textStyle: baseStyle);
-      case 'Roboto':
-        return GoogleFonts.roboto(textStyle: baseStyle);
-      case 'Lato':
-        return GoogleFonts.lato(textStyle: baseStyle);
-      case 'Bangers':
-        return GoogleFonts.bangers(textStyle: baseStyle);
-      case 'Bungee Inline':
-        return GoogleFonts.bungeeInline(textStyle: baseStyle);
-      default:
-        return GoogleFonts.roboto(textStyle: baseStyle); // 備用字體
-    }
   }
 }

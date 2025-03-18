@@ -5,6 +5,7 @@ import 'dart:ui'; // 用於模糊效果
 import '../../providers/preview_mode_provider.dart';
 import '../../providers/scroller_providers.dart';
 import '../../models/scroller.dart';
+import '../../utils/font_utils.dart'; // 引入字體工具類
 import '../create/widgets/led_grid_painter.dart'; // 引入LED點陣效果
 
 /// 預覽頁面
@@ -209,8 +210,8 @@ class _PreviewScreenState extends ConsumerState<PreviewScreen> with SingleTicker
       );
     }
 
-    final backgroundColor = Color(int.parse(scroller.backgroundColor.replaceAll('#', '0xFF')));
-    final textColor = Color(int.parse(scroller.textColor.replaceAll('#', '0xFF')));
+    final backgroundColor = FontUtils.hexToColor(scroller.backgroundColor);
+    final textColor = FontUtils.hexToColor(scroller.textColor);
 
     if (_showLedEffect != scroller.ledBackgroundEnabled) {
       setState(() {
@@ -320,10 +321,11 @@ class _PreviewScreenState extends ConsumerState<PreviewScreen> with SingleTicker
       ) {
     final screenWidth = MediaQuery.of(context).size.width;
 
-    final TextStyle textStyle = TextStyle(
-      color: color,
-      fontSize: fontSize,
+    // 使用FontUtils獲取字體樣式
+    final textStyle = FontUtils.getGoogleFontStyle(
       fontFamily: fontFamily,
+      fontSize: fontSize,
+      color: color,
       letterSpacing: 1.2,
       height: 1.2,
     );
@@ -385,10 +387,11 @@ class _PreviewScreenState extends ConsumerState<PreviewScreen> with SingleTicker
       quarterTurns: 1,
       child: Text(
         text,
-        style: TextStyle(
-          color: color,
-          fontSize: fontSize,
+        // 使用FontUtils獲取字體樣式
+        style: FontUtils.getGoogleFontStyle(
           fontFamily: fontFamily,
+          fontSize: fontSize,
+          color: color,
           letterSpacing: 1.2,
         ),
         textAlign: TextAlign.center,
@@ -462,7 +465,12 @@ class _PreviewScreenState extends ConsumerState<PreviewScreen> with SingleTicker
             child: const Text('Back'),
           ),
           ElevatedButton(
-            onPressed: () => context.go('/create'),
+            onPressed: () {
+              final currentScroller = ref.read(currentScrollerProvider);
+              if (currentScroller != null) {
+                context.go('/create');
+              }
+            },
             style: _buttonStyle(),
             child: const Text('Edit'),
           ),
